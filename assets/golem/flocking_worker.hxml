@@ -1,0 +1,7 @@
+##GOLEM##
+-main worker.FlockingWorker
+-js flocker.js
+-lib golems
+-dce full
+-D analyzer
+-cp ../../src

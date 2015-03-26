@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<!-- http://www.openfl.org/documentation/projects/project-files/xml-format/ -->
+	<meta title="horizon" package="mikedotalmond.labs.horizon" version="1.0.0" company="Mike Almond - https://github.com/mikedotalmond" />
+	
+	<!-- need to force this - for some reason (after lime 2.0.0-beta) it thinks my HAXEPATH is "C:\Motion-Twin\haxe\" but it's not in my env vars as that -->
+	<setenv name="HAXEPATH" value="C:\HaxeToolkit\haxe\" />
+	
+	<!-- output -->
+	<app main="Main" file="horizon" path="bin" />
+	<!-- custom preloader -->
+	<app preloader="ui.HorizonPreloader" />
+	
+	<window background="#0a0a0a" />
+	<window fps="60" unless="html5" />
+	<window fullscreen="true" if="mobile" />
+	<window width="1280" height="720" unless="mobile" />
+	<window orientation="landscape" vsync="true" antialiasing="0" if="cpp" />
+	
+	<!-- classpath, haxelibs -->
+	<source path="src" />	
+	<haxelib name="lime" version="2.1.3" />
+	<haxelib name="openfl" version="2.2.8"/>
+	<haxelib name="actuate" version="1.8.3"/>
+	<haxelib name="golems" version="1.2.0"/>
+	<haxelib name="hxsignal" version="0.9.0"/>
+	
+	<!-- assets -->
+	<icon path="assets/icons/horizon640.png" size="640" />	
+	<icon path="assets/icons/horizon512.png" size="512" />	
+	<icon path="assets/icons/horizon320.png" size="320" />	
+	<icon path="assets/icons/horizon256.png" size="256" />	
+	<icon path="assets/icons/horizon128.png" size="128" />	
+	<icon path="assets/icons/horizon64.png" size="64" />	
+	<icon path="assets/icons/horizon32.png" size="32" />	
+	<icon path="assets/icons/horizon16.png" size="16" />	
+	
+	<assets path="assets/img" rename="img" />
+	
+	<!-- audio -->
+	<assets path="assets/audio/notes" rename="audio/notes" include="*.ogg"/>
+	
+	<!-- some js/html specifics -->
+	<section if="html5">
+		<template path="assets/icons/horizon16.png" rename="img/icons/horizon16.png" />	
+		<template path="assets/icons/horizon32.png" rename="img/icons/horizon32.png" />	
+		<template path="assets/icons/horizon64.png" rename="img/icons/horizon64.png" />	
+		<template path="assets/icons/horizon128.png" rename="img/icons/horizon128.png" />	
+		<template path="assets/icons/horizon256.png" rename="img/icons/horizon256.png" />	
+		<template path="assets/icons/horizon512.png" rename="img/icons/horizon512.png" />	
+		<template path="assets/icons/horizon640.png" rename="img/icons/horizon640.png" />	
+		<template path="assets/web/index.html" rename="index.html"/>
+		<template path="assets/web/img/bg.jpg" rename="img/bg.jpg"/>
+		<template path="assets/web/css/styles.min.css" rename="css/styles.min.css"/>		
+		<template path="assets/web/about/index.html" rename="about/index.html"/>		
+		<template path="assets/web/about/styles.min.css" rename="about/styles.min.css"/>		
+		<dependency path="assets/web/js/screenfull.min.js" rename="lib/screenfull.min.js"/>		
+	</section>
+	
+	
+	<section if="debug">
+		<haxeflag name="-D debugDraw" if="html5" />
+		<section if="cpp">		
+			<haxedef name="HXCPP_DEBUG_LINK"/>
+			<haxedef name="HXCPP_STACK_LINE"/>
+			<haxedef name="HXCPP_CHECK_POINTER"/>		
+			<haxedef name="DHXCPP_STACK_TRACE"/>
+		</section>
+	</section>
+	
+	<!-- optimize output -->
+	<section if="release">
+		<haxeflag name="--no-traces" />
+		<haxeflag name="-D js-flatten" if="html5" />
+		<haxeflag name="-D analyzer" />
+		<haxeflag name="-dce full" unless="cpp" />
+		<haxeflag name="-dce std" if="cpp" /><!--cpp has issues / aggressive dce -- crashes with missing properites on display objects (.visible etc...) possibly actuate related (property Reflection) -->
+	</section>
+	
+</project>

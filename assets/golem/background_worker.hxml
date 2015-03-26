@@ -1,0 +1,10 @@
+##GOLEM##
+-main worker.BackgroundImageWorker
+-js background.js
+-lib golems
+-lib openfl
+-lib lime
+-D html5
+-dce full
+-D analyzer
+-cp ../../src

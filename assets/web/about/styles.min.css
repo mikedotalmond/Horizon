@@ -1,0 +1,11 @@
+html,body{margin:0;padding:0;height:100%;}
+.bg{background-image:url(../img/bg.jpg);background-repeat:no-repeat;background-size:cover;background-attachment:fixed;}
+.about a{text-decoration:none;color:#DA5692;}
+.about a:hover{color:#fA5692;}
+.about h1,h2,h3,h4,h5,h6{font-family:'Source Sans Pro',sans-serif;font-weight:200;color:#444447;letter-spacing:.5em;text-shadow:0px 0px 6px rgba(0,0,0,0.15);}
+.about hr{opacity:0.33;}
+.about h1{font-size:4em;word-break:break-all;}
+.about h2,h3,h4,h5,h6{margin-top:2.35em;}
+.about .content-outer{width:100%;margin:auto;}
+.about .content{width:66%;position:relative;margin:auto;font-weight:300;}
+.about .content p,li{font-family:'Source Sans Pro',sans-serif;font-size:1em;text-align:justify;color:#181835;text-shadow:0px 1px 8px #FFF;}

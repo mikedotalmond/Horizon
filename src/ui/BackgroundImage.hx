@@ -95,7 +95,7 @@ import worker.Data;
 		
 		
 		#if js
-		ctx = untyped nextTargetData.__image.buffer.__srcContext;
+		ctx = untyped nextTargetData.image.buffer.__srcContext;
 		imgData = ctx.createImageData(BackgroundImageData.Width, 1);
 		#else
 		imgBytes = new ByteArray();
@@ -149,8 +149,11 @@ import worker.Data;
 		// so here we're hacking around with the internal canvas2d representation for the js target...
 		// directly setting imgData here then, to draw it, we only need to call ctx.putImageData(imgData, 0, sliceRect.y);
 		#if js
+		var colour;
 		var i = 0;
-		for (colour in data) {
+		var n = data.length;
+		for (j in 0...n) {
+			colour 				= data[j];
 			imgData.data[i]		= (colour >> 24) & 0xff; // r
 			imgData.data[i + 1] = (colour >> 16) & 0xff; // g 
 			imgData.data[i + 2] = (colour >> 8) & 0xff; // b 
@@ -184,7 +187,7 @@ import worker.Data;
 			needDraw = false;
 			nextTargetData.lock();
 			#if js			
-			untyped nextTargetData.__image.buffer.__srcContext.putImageData(imgData, 0, sliceRect.y);
+			untyped nextTargetData.image.buffer.__srcContext.putImageData(imgData, 0, sliceRect.y);
 			#else
 			nextTargetData.setPixels(sliceRect, imgBytes);
 			#end

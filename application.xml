@@ -19,11 +19,14 @@
 	
 	<!-- classpath, haxelibs -->
 	<source path="src" />	
+	<haxelib name="openfl" />
+	<!--
 	<haxelib name="lime" version="2.1.3" />
 	<haxelib name="openfl" version="2.2.8"/>
-	<haxelib name="actuate" version="1.8.3"/>
-	<haxelib name="golems" version="1.2.0"/>
-	<haxelib name="hxsignal" version="0.9.0"/>
+	-->
+	<haxelib name="actuate" />
+	<haxelib name="golems" />
+	<haxelib name="hxsignal" />
 	
 	<!-- assets -->
 	<icon path="assets/icons/horizon640.png" size="640" />	
@@ -68,13 +71,11 @@
 		</section>
 	</section>
 	
-	<!-- optimize output -->
+	<!-- optimize output 
 	<section if="release">
 		<haxeflag name="--no-traces" />
 		<haxeflag name="-D js-flatten" if="html5" />
 		<haxeflag name="-D analyzer" />
-		<haxeflag name="-dce full" unless="cpp" />
-		<haxeflag name="-dce std" if="cpp" /><!--cpp has issues / aggressive dce -- crashes with missing properites on display objects (.visible etc...) possibly actuate related (property Reflection) -->
-	</section>
+	</section> -->
 	
 </project>

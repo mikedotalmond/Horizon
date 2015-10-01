@@ -172,7 +172,7 @@ class Main extends Sprite {
 	
 	#if html5
 	function onVisibilityChange(_) { 
-		soundToggle.toggle.emit(js.Browser.document.visibilityState != 'hidden');
+		soundToggle.toggle.emit(js.Browser.document.visibilityState != js.html.VisibilityState.HIDDEN);
 	}
 	#elseif cpp
 	function stateHandler(e:Event) {

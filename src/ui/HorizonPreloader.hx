@@ -53,6 +53,6 @@ class HorizonPreloader extends OpenFLPreloader {
 		Timer.delay(function() {
 			trace('delayed complete');
 			dispatchEvent(new Event(Event.COMPLETE));
-		}, 500);
+		}, 600);
 	}
 }

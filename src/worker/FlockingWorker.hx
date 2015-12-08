@@ -208,7 +208,7 @@ import util.MathUtil;
 			yScale = 1 - (by / HEIGHT); // x pos
 			d[index + Data_Scale] = b.scale + b.scale * yScale * .7; // y pos
 			
-			d[index + Data_Alpha] = .04 - .03 * yScale;
+			d[index + Data_Alpha] = 0.03 - .03 * yScale;
 			
 			b = b.next;
 		}

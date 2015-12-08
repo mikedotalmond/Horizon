@@ -39,7 +39,7 @@ class FlockSprites extends ParticleContainer {
 	public function new() {
 		
 		count = 512;
-		drawCount = count << 1;// (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
+		drawCount = (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
 	
 		super(drawCount, {scale:true, position:true, alpha:true});
 		

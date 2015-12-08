@@ -14,10 +14,10 @@ class HorizonStripShader extends AbstractFilter {
 		super(null, CompileTime.readFile('pixi/filters/HorizonStripShader_frag.glsl'), {
 			textureA:     	{ type: 'sampler2D', value: textureA },
 			textureB:     	{ type: 'sampler2D', value: textureB },
-            position:     	{ type: 'f', value: .5 },
-            seeds:     		{ type: 'v2', value: { x: .345345, y: .34532 } },
-			stripsA:		{ type: 'v4', value: { x: 0, y: 0.1, z:0.2, w:0.3 } },
-			stripsB:		{ type: 'v3', value: { x: .4, y: .5, z:.6 } },
+            position:     	{ type: 'f', value: .0 },
+            seeds:     		{ type: 'v2', value: { x: .0, y: .0 } },
+			stripsA:		{ type: 'v4', value: { x: .0, y: .0, z:.0, w:.0 } },
+			stripsB:		{ type: 'v3', value: { x: .0, y: .0, z:.0 } },
 			yOffsets:		{ type: 'v3', value: { x: 0, y: 0 , z:0 } },
 		});
 	}

@@ -56,7 +56,7 @@ class Main extends Application {
 	
 	function setup() {
 		
-		currentStrips = new Float32Array([0, .1, .2, .3, .4, .5, .6]);
+		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
 		pickNewStripTargets();
 		
@@ -70,6 +70,8 @@ class Main extends Application {
 		bg = new Sprite(t1);
 		stage.addChild(bg);
 		shader = new HorizonStripShader(t1, t2);
+		shader.setStrips(currentStrips);
+		
 		bg.filters = [shader];
 		
 		fSprites = new FlockSprites();
@@ -99,12 +101,15 @@ class Main extends Application {
 		canvas.style.height = height + "px";
 	}
 	
-	
-	function draw(dt:Float) {
+	var lastTime:Float = 0;
+	function draw(elapsed:Float) {
 		
-		var nowSeconds = now / 1000;
+		var dt = elapsed - lastTime; 
+		lastTime = elapsed;
 		
-		fSprites.update(nowSeconds, dt / 1000);
+		var tSeconds = elapsed / 1000;
+		
+		fSprites.update(tSeconds, dt / 1000);
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
 		
@@ -113,14 +118,13 @@ class Main extends Application {
 			newSliceTimer = 0;
 			pickNewStripTargets();
 		}
-
+		
 		// update shader parameters  
-		var a = Math.sin(.5 + nowSeconds / 10.5);
-		var b = Math.sin(nowSeconds / 6.666 + Math.cos(nowSeconds / 7.777));
-		var c = Math.sin(.5 + nowSeconds / 10);
+		var a = Math.sin(.5 + tSeconds / 10.5);
+		var b = Math.sin(tSeconds / 6.666 + Math.cos(tSeconds / 7.777));
+		var c = Math.sin(.5 + tSeconds / 10);
 		// TODO: fix these values... ranges are not right 
 		//shader.setYOffsetData(3*c, .5 + b*.2, 8*a);
-	
 		
 		shader.fadePosition = (Math.sin(now / 30000) + 1) * .5;
 		
@@ -129,7 +133,6 @@ class Main extends Application {
 	
 	
 	function updateStrips() {
-		
 		// lerp slices toward targets...
 		var c;
 		var f=0.0002; // speed
@@ -142,6 +145,7 @@ class Main extends Application {
 	}
 	
 	function pickNewStripTargets() {
+		//trace('pickNewStripTargets');
 		var stripWidth = 1.0 / SliceCount;
 		for (i in 0...SliceCount) {
 			targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;  

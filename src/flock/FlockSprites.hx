@@ -42,6 +42,7 @@ class FlockSprites extends ParticleContainer {
 		var texture = Texture.fromImage("img/blurBlob.png");
 		for (i in 0...SpriteCount) {
 			var s = new Sprite(texture);
+			s.x = -100;
 			addChild(s);
 		}
 		

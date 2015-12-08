@@ -2,6 +2,7 @@ package flock;
 
 import flock.FieldPoint.RndPoint;
 import hxsignal.Signal;
+import js.html.Float32Array;
 import motion.easing.*;
 import pixi.core.particles.ParticleContainer;
 import pixi.core.sprites.Sprite;
@@ -11,47 +12,38 @@ import worker.FlockData;
 import net.rezmason.utils.workers.Golem;
 import net.rezmason.utils.workers.QuickBoss;
 
-import util.Env;
 import util.MathUtil;
 
 import worker.Data;
-import worker.Data.FloatArray;
 import worker.FlockData.FlockBoss;
 import worker.FlockData.FlockUpdateData;
 
 
 class FlockSprites extends ParticleContainer {
 	
-	var inputs			:Inputs;
 	var needData		:Bool = true;
     var flocker			:FlockBoss = null;
 	
 	var forces			:Array<FieldPoint>;
-	var pointForces		:FloatArray;
+	var pointForces		:Float32Array;
 	var flockUpdateData	:FlockUpdateData;
-	
-	var smooth			:Bool;
-	var boidTexture		:Texture;
 	
 	var phase			:Float;
 	var count			:Int;
 	
-	var drawList		:FloatArray;
+	var drawList		:Float32Array;
 	var drawCount		:Int;
 	
-	public var updated(default, null):Signal<FloatArray->Int->Void>;
+	public var updated(default, null):Signal<Float32Array->Int->Void>;
 	
-	public function new(inputs:Inputs) {
+	public function new() {
 		
 		count = 512;
 		drawCount = count << 1;// (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
 	
-		super(drawCount, [false, true, false, false, true]);
+		super(drawCount, {scale:true, position:true, alpha:true});
 		
-		this.inputs = inputs;
-		
-		updated = new Signal<FloatArray->Int->Void>();
-		smooth = false;
+		updated = new Signal<Float32Array->Int->Void>();
 		
 		var texture = Texture.fromImage("img/blurBlob.png");
 		for (i in 0...drawCount) {
@@ -61,8 +53,6 @@ class FlockSprites extends ParticleContainer {
 		
 		phase = (Math.random() - .5) * (Math.PI * 4);
 		createWorker();
-		
-		inputs.enterFrame.connect(enterFrame);
 	}
 	
 	
@@ -87,28 +77,29 @@ class FlockSprites extends ParticleContainer {
 			//new RndPoint(4,   .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
 		];
 		
-		pointForces = new FloatArray(fx);
+		pointForces = new Float32Array(fx);
 		
 		// create this container now, send it with each update
-		flockUpdateData = { type:Data.TYPE_UPDATE, pointForces:pointForces, scaleFactor:Env.scaleFactor };
+		flockUpdateData = { type:Data.TYPE_UPDATE, pointForces:pointForces, scaleFactor:1 };
 		
 		flocker = new FlockBoss(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
-		flocker.send(cast { type:Data.TYPE_INIT, count:count, screenDensity:Env.screenDensity } ); // init
+		flocker.send(cast { type:Data.TYPE_INIT, count:count, screenDensity:1 } ); // init
 	}
 	
 	
-	function enterFrame(now:Float, dt:Float) {	
+	public function update(now:Float, dt:Float) {	
 		
 		if (needData) return;
 		
 		var j = 0;
 		var child;
-		while (i < drawList.length) {
+		var i = 0;
+		while (i < drawCount) {
 			child = getChildAt(j);
 			child.x = drawList[i];
 			child.y = drawList[i + 1];
-			child.scale = drawList[i + 2];
+			child.scale.set(drawList[i + 2]);
 			child.alpha = drawList[i + 3];
 			i += 4;
 			j++;
@@ -128,19 +119,19 @@ class FlockSprites extends ParticleContainer {
 		
 		//
 		var mIndx = (forces.length * 3);
-		var v = inputs.mouseVelocity;
+		//var v = inputs.mouseVelocity;
 		var f = pointForces[mIndx + 2];
-		if (v > 0 && inputs.mouseIsDown) {
-			pointForces[mIndx] 		= mouseX;
-			pointForces[mIndx + 1]	= mouseY;
-			pointForces[mIndx + 2]	= f + (v - f) * 5e-12;
-		} else {
+		//if (v > 0 && inputs.mouseIsDown) {
+			//pointForces[mIndx] 		= mouseX;
+			//pointForces[mIndx + 1]	= mouseY;
+			//pointForces[mIndx + 2]	= f + (v - f) * 5e-12;
+		//} else {
 			pointForces[mIndx + 2]	= f > 5e-12 ? f * .8 : 0;
-		}
+		//}
 		
 		updated.emit(drawList, drawCount);
 		
-		flockUpdateData.scaleFactor = Env.scaleFactor;
+		flockUpdateData.scaleFactor = 1;// Env.scaleFactor;
 		
 		// send the update request + data...
 		flocker.send(flockUpdateData);
@@ -153,7 +144,7 @@ class FlockSprites extends ParticleContainer {
 	 * followed by data-points about the flock
 	 * @param	d
 	 */
-    function onWorkerComplete(d:FloatArray) {
+    function onWorkerComplete(d:Float32Array) {
 		needData = false;
 		drawList = d;
     }

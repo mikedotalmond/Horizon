@@ -1,5 +1,6 @@
 package;
 
+import flock.FlockSprites;
 import js.Browser;
 import js.html.Event;
 import js.html.Float32Array;
@@ -37,13 +38,14 @@ class Main extends Application {
 	static inline var newSliceTime = 6000;
 	static inline var sliceCount = 7; // vertical slice count (max of 7)
 	var bg:pixi.core.sprites.Sprite;
+	var fSprites:flock.FlockSprites;
 
 	
 	public function new() {
 		super();
 		
 		antialias = false;
-		backgroundColor = 0;
+		backgroundColor =0;
 		start('webgl', Browser.document.getElementById('pixi-container'));
 		renderer.resize(1280, 720);
 		
@@ -70,9 +72,11 @@ class Main extends Application {
 		bg = new Sprite(t1);
 		stage.addChild(bg);
 		shader = new HorizonStripShader(t1, t2);
-		
-		stage.addChild(bg);
 		bg.filters = [shader];
+		
+		fSprites = new FlockSprites();
+		stage.addChild(fSprites);
+		
 	}
 	
 	override function _onWindowResize(event:Event) {
@@ -99,6 +103,8 @@ class Main extends Application {
 	
 	
 	function draw(dt:Float) {
+		
+		fSprites.update(Browser.window.performance.now()/1000,dt/1000);
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
 		

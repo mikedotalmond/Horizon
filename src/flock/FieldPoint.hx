@@ -29,7 +29,7 @@ class FieldPoint {
 	var next:Pt;
 	var last:Pt;
 	var current:Pt;
-	var seed:Int
+	var seed:Int;
 	
 	function new(seed=1){
 		this.seed = seed < 1 ? 1 : (seed >= rMax ? rMax-1 : seed);

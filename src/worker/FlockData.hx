@@ -13,7 +13,7 @@ import worker.Data.WorkerData;
 @:final class FlockData { 
 	public static inline var X_DATA_POINTS:Int = 48; // vx
 	public static inline var Y_DATA_POINTS:Int = 48; // vy
-	public static inline var TILE_FIELDS:Int = 5; // x, y, index, alpha, scale
+	public static inline var TILE_FIELDS:Int = 4; // x, y, alpha, scale
 }
 
 @:final typedef FlockBoss = QuickBoss<WorkerData, Float32Array>;

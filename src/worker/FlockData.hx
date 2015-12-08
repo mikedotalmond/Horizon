@@ -5,9 +5,9 @@ package worker;
  * @author Mike Almond - https://github.com/mikedotalmond
  */
 
+import js.html.Float32Array;
 import net.rezmason.utils.workers.QuickBoss;
 
-import worker.Data.FloatArray;
 import worker.Data.WorkerData;
 
 @:final class FlockData { 
@@ -16,7 +16,7 @@ import worker.Data.WorkerData;
 	public static inline var TILE_FIELDS:Int = 5; // x, y, index, alpha, scale
 }
 
-@:final typedef FlockBoss = QuickBoss<WorkerData, FloatArray>;
+@:final typedef FlockBoss = QuickBoss<WorkerData, Float32Array>;
 
 @:final typedef FlockInitData = {> WorkerData,
 	var screenDensity:Float;
@@ -24,6 +24,6 @@ import worker.Data.WorkerData;
 }
 
 @:final typedef FlockUpdateData = {> WorkerData,
-	var pointForces:FloatArray; /* [pX, pY, f, ... ] */
+	var pointForces:Float32Array; /* [pX, pY, f, ... ] */
 	var scaleFactor:Float;
 }

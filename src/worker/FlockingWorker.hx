@@ -5,19 +5,19 @@ package worker;
  * @author Mike Almond - https://github.com/mikedotalmond
  */
 
+import js.html.Float32Array;
 import net.rezmason.utils.workers.BasicWorker;
 
 import worker.FlockData.FlockInitData;
 import worker.FlockData.FlockUpdateData;
 
 import worker.Data.WorkerData;
-import worker.Data.FloatArray;
 import worker.FlockingWorker.Boid;
 
 import util.MathUtil;
 
 @:keep
-@:final class FlockingWorker extends BasicWorker<WorkerData, FloatArray> {
+@:final class FlockingWorker extends BasicWorker<WorkerData, Float32Array> {
 
 	public static inline var WIDTH:Float = 1280;
 	public static inline var HEIGHT:Float = 500;
@@ -42,12 +42,12 @@ import util.MathUtil;
 	var count			:Int;
 	var dataOffset		:Int;
 	var boids			:Boid;
-	var drawList		:FloatArray;
+	var drawList		:Float32Array;
 	var cells			:Array<Array<Boid>>;
 	var screenDensity	:Float;
 	
 	
-	override function process(data:WorkerData):FloatArray {
+	override function process(data:WorkerData):Float32Array {
 		switch(data.type) {
 			case Data.TYPE_INIT: init(cast data);
 			case Data.TYPE_UPDATE: update(cast data);
@@ -65,9 +65,8 @@ import util.MathUtil;
 	
 	static inline var Data_X		:Int = 0;
 	static inline var Data_Y		:Int = 1;
-	static inline var Data_Sprite	:Int = 2;
-	static inline var Data_Scale	:Int = 3;
-	static inline var Data_Alpha	:Int = 4;
+	static inline var Data_Scale	:Int = 2;
+	static inline var Data_Alpha	:Int = 3;
 	
 	function createBoids(count:Int) {
 		
@@ -96,20 +95,14 @@ import util.MathUtil;
 			index 						= i * FlockData.TILE_FIELDS;
 			data[index + Data_X] 		= b.x;
 			data[index + Data_Y] 		= b.y;
-			data[index + Data_Sprite] 	= 0; // sprite index
 			data[index + Data_Scale] 	= b.drawScale = ((b.scale * size / 4.8) * screenDensity);
 			data[index + Data_Alpha] 	= b.alpha;
 			
 			index 						+= cloneOffset;
 			data[index + Data_X] 		= b.x;
 			data[index + Data_Y] 		= b.y;
-			data[index + Data_Sprite] 	= 0; 
 			data[index + Data_Scale] 	= .25;
-			#if mobile
-			data[index + Data_Alpha] = 0.08;// b.alpha * .2;
-			#else
-			data[index + Data_Alpha] = 0.04;// b.alpha * .2;
-			#end
+			data[index + Data_Alpha]	= 0.04;// b.alpha * .2;
 			
 			if (boids == null) boids = b;
 			else last.next = b;
@@ -122,11 +115,7 @@ import util.MathUtil;
 		dataOffset 	= data.length;
 		data 		= data.concat([for(i in 0...(FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS)) .0]);
 		
-		#if js
-		drawList = new FloatArray(data);
-		#else
-		drawList = data;
-		#end
+		drawList = new Float32Array(data);
 	}
 	
 	
@@ -142,11 +131,7 @@ import util.MathUtil;
 		
 		// empty cells
 		for (i in 0...CellCount) {
-			#if js
-			untyped __js__('c[i].length = 0'); // set length on array is ok...
-			#else
-			c[i] = [];
-			#end
+			untyped __js__('c[i].length = 0'); // set length on array is ok in js...
 		}
 		
 		var b = boids;
@@ -177,9 +162,7 @@ import util.MathUtil;
 			b = b.next;
 		}
 		
-		#if js
 		var scaleFactor = data.scaleFactor;
-		#end
 		
 		b = boids;
 		
@@ -213,11 +196,9 @@ import util.MathUtil;
 			d[index + Data_X] = bx;
 			d[index + Data_Y] = by;
 			
-			#if js
 			tmpA = b.drawScale;
 			tmpB = tmpA / scaleFactor;
 			d[index + Data_Scale] = MathUtil.min(tmpA, tmpB);
-			#end
 			
 			// 'reflection' clones			
 			index += cloneOffset;
@@ -227,11 +208,7 @@ import util.MathUtil;
 			yScale = 1 - (by / HEIGHT); // x pos
 			d[index + Data_Scale] = b.scale + b.scale * yScale * .7; // y pos
 			
-			#if mobile
-			d[index + Data_Alpha] = .05 - .02 * yScale;
-			#else
 			d[index + Data_Alpha] = .04 - .03 * yScale;
-			#end
 			
 			b = b.next;
 		}
@@ -304,14 +281,14 @@ import util.MathUtil;
 	}
 	
 	
-	public function update(fieldCount:Int, pointForces:FloatArray) {
+	public function update(fieldCount:Int, pointForces:Float32Array) {
 	
 		var strength = 0.0;
 		var vxHeading = .0;
 		var vyHeading = .0;
 		var f = .0;
 		var hx = .0;
-		var hy = .0;		
+		var hy = .0;
 		var n = fieldCount;
 		
 		var j;

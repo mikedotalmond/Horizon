@@ -1,14 +1,12 @@
 package;
 
-import flock.FlockTiles;
+import flock.FlockSprites;
 import motion.Actuate;
+
 import motion.actuators.PropertyDetails;
 import motion.actuators.SimpleActuator;
 import motion.easing.Sine;
-import openfl.Assets;
-import openfl.events.Event;
-import openfl.media.Sound;
-import openfl.media.SoundChannel;
+
 import util.MathUtil;
 import worker.Data.FloatArray;
 import worker.FlockData;
@@ -59,7 +57,7 @@ class SoundControl {
 	inline function get_noteCount() return noteIDs.length;
 
 	
-	public function new(inputs:Inputs, flock:FlockTiles) {
+	public function new(inputs:Inputs, flock:FlockSprites) {
 		
 		flock.updated.connect(flockUpdate);
 		paused = false;

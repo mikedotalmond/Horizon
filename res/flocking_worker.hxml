@@ -4,4 +4,4 @@
 -lib golems
 -dce full
 -D analyzer
--cp ../../src
+-cp ../src

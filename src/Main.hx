@@ -1,229 +1,145 @@
-package ;
+package;
+
+import js.Browser;
+import js.html.Event;
+import js.html.Float32Array;
+import net.rezmason.utils.workers.Golem;
+import net.rezmason.utils.workers.QuickBoss;
+import pixi.core.display.Container;
+import pixi.core.graphics.Graphics;
+import pixi.core.sprites.Sprite;
+import pixi.core.textures.Texture;
+import pixi.filters.blur.BlurFilter;
+import pixi.filters.HorizonStripShader;
+import pixi.plugins.app.Application;
+import worker.FlockData.FlockBoss;
+
 
 /**
  * ...
  * @author Mike Almond - https://github.com/mikedotalmond
  */
 
-import haxe.Timer;
+typedef TestThread = QuickBoss<Int, Int>;
 
-import motion.Actuate;
-import motion.easing.Quad.QuadEaseIn;
-import motion.easing.Quad.QuadEaseOut;
+class Main extends Application {
 
-import openfl.Assets;
-import openfl.display.Bitmap;
-import openfl.display.Shape;
-import openfl.display.Sprite;
-import openfl.events.Event;
-import openfl.Lib;
-import openfl.ui.Keyboard;
+	//
+	var container:Container;
+	var shader:pixi.filters.HorizonStripShader;
+	var bg2:Sprite;
+	var targetStrips:Float32Array;
+	var currentStrips:Float32Array;
+	
+	//var lastTime:Float= 0;
+	var newSliceTimer:Float=0;
 
-import flock.FlockTiles;
-import ui.BackgroundImage;
-import ui.buttons.SoundToggle;
-#if (html5 || windows)
-import ui.buttons.FullscreenToggle;
-#end
-import util.Env;
-import util.MathUtil;
+	static inline var newSliceTime = 6000;
+	static inline var sliceCount = 7; // vertical slice count (max of 7)
+	var bg:pixi.core.sprites.Sprite;
 
-
-class Main extends Sprite {
 	
-	var inited			:Bool;
-	
-	var bgLogo			:Bitmap;
-	
-	var soundToggle		:SoundToggle;
-	
-	#if (html5||windows)
-	var fullscreenToggle:FullscreenToggle;
-	#end
-	
-	public var flock		(default, null):FlockTiles;
-	public var background	(default, null):BackgroundImage;
-
-	public var inputs		(default, null):Inputs;
-	public var soundControl	(default, null):SoundControl;
-	
-	function init() {
-		if (inited) return;
-		inited = true;
-		
-		setupInputs();
-		
-		Env.setup(inputs);
-		
-		#if !html5
-		setStageSize(Lib.current.stage.stageWidth, Lib.current.stage.stageHeight);
-			#if windows
-			Env.stageResized.connect(setStageSize);
-			#end
-		#end
-		
-		setupUI();	
-		
-		#if debugDraw
-		drawDebugGrid();
-		#end
-		
-		// fade the bg in, then setup...
-		Actuate.tween(bgLogo, 1, { alpha:1 })
-			.ease(new QuadEaseIn())
-			.onComplete(background.setup);
-			
-		trace("TODO: reduce/remove runtime allocations");
-		// i see some alloc/dealloc in:
-		// - soundcontrol / playback  (array create,push,pop,splice)
-		// - flockingworker space partitioning (array create, push)
-	}
-	
-	
-	function setStageSize(w, h):Void {
-		
-		var w1 = w / 1280;
-		var h1 = h / 720;
-		var s;
-		
-		#if windows
-		s = MathUtil.min(w1, h1);
-		#else
-		s = MathUtil.max(w1, h1);
-		#end
-		
-		x = (w / 2) - (s * 1280) / 2;
-		y = (h / 2) - (s * 720) / 2;
-		
-		scaleX = scaleY = s;
-	}
-	
-	
-	function setupInputs():Void {		
-		inputs = new Inputs();
-		inputs.keyDown.connect(function(code) {
-			switch(cast code) {
-				case Keyboard.F:
-					Env.toggleFullscreen();
-				#if debugDraw
-				case Keyboard.D:
-					flock.debugVisible = !flock.debugVisible;
-				#end
-			}
-		});
-		
-		inputs.doubleClick.connect(function(_,_) {
-			Env.toggleFullscreen();
-		});
-	}
-	
-	
-	function setupUI():Void {
-		
-		background = new BackgroundImage(this);	
-		background.ready.connect(backgroundImageDataReady, Once);		
-		
-		addChild(bgLogo = new Bitmap(Assets.getBitmapData('img/horizon.png'), null, true));
-		bgLogo.alpha = 0;
-		
-		soundToggle = new SoundToggle(inputs);
-		soundToggle.toggle.connect(function(soundOn) soundControl.setPause(!soundOn));
-		
-		#if (html5 || windows)
-		fullscreenToggle = new FullscreenToggle(inputs);
-		#end
-	}
-	
-	
-	function backgroundImageDataReady() {
-		Actuate.tween(bgLogo, 1, { alpha:0 } )
-			.delay(.5)
-			.ease(new QuadEaseOut())
-			.onComplete(start);
-	}
-	
-	
-	function start(){
-		
-		removeChild(bgLogo);
-		bgLogo.bitmapData.dispose();
-		bgLogo.bitmapData = null;
-		bgLogo = null;
-		
-		addChild(flock = new FlockTiles(inputs));
-		soundControl = new SoundControl(inputs, flock);
-		soundControl.play(0, 0, 0, 0); // start sound
-		
-		#if html5
-		js.Browser.document.addEventListener("visibilitychange", onVisibilityChange);
-		#elseif cpp
-		stage.addEventListener(Event.ACTIVATE, stateHandler);
-		stage.addEventListener(Event.DEACTIVATE, stateHandler);
-		#end
-		
-		soundToggle.setup(this, 10, 10);
-		
-		#if (html5||windows)
-		fullscreenToggle.setup(this, 1210, 6);
-		#end
-		
-		background.update();
-	}
-	
-	#if html5
-	function onVisibilityChange(_) { 
-		soundToggle.toggle.emit(js.Browser.document.visibilityState != js.html.VisibilityState.HIDDEN);
-	}
-	#elseif cpp
-	function stateHandler(e:Event) {
-		soundToggle.toggle.emit(e.type == Event.ACTIVATE);
-	}
-	#end
-	
-	#if (debugDraw)
-	function drawDebugGrid():Void {
-		var shp = new Shape();
-		shp.graphics.lineStyle(1, 0xff0000, 1);
-		for (x in 0...4) {
-			shp.graphics.moveTo(x*(1280/4), 0);
-			shp.graphics.lineTo(x*(1280/4), 720);
-		}
-		for (y in 0...4) {
-			shp.graphics.moveTo(0, y*(720/4));
-			shp.graphics.lineTo(1280, y*(720/4));
-		}
-		addChild(shp);
-	}
-	#end
-	
-	/* -----------------------------------------------------------------*/
-	/* -----------------------------------------------------------------*/
-	
-	/* setup */
 	public function new() {
-		super();			
-		addEventListener(Event.ADDED_TO_STAGE, added);
+		super();
+		
+		antialias = false;
+		backgroundColor = 0;
+		start('webgl', Browser.document.getElementById('pixi-container'));
+		renderer.resize(1280, 720);
+		
+		setup();
+		
+		onUpdate = draw;
+		_onWindowResize(null);
 	}
+	
+	
+	function setup() {
+		
+		currentStrips = new Float32Array([0, .1, .2, .3, .4, .5, .6]);
+		targetStrips = new Float32Array(7);
+		pickNewStripTargets();
+		
+		// setup pixi
+		container = new Container();
+		stage.addChild(container);
+		//renderer.backgroundColor = 0x10101F;
+		var t1 = Texture.fromImage("img/horizon-bg1.jpg");
+		var t2 = Texture.fromImage("img/horizon-bg2.jpg");
+		
+		bg = new Sprite(t1);
+		stage.addChild(bg);
+		shader = new HorizonStripShader(t1, t2);
+		
+		stage.addChild(bg);
+		bg.filters = [shader];
+	}
+	
+	override function _onWindowResize(event:Event) {
+		
+		var fullW = Browser.window.innerWidth;
+		var fullH = Browser.window.innerHeight;
+		
+		var r1 = fullW / 1280;
+		var r2 = fullH / 720;
+		
+		if (r1 < r2) {
+			width = fullW;
+			height = 720 * r1;
+		} else {
+			height = fullH;
+			width = 1280 * r2;
+		}
+		
+		canvas.style.top = (fullH/2 - height/2) + "px";
+		canvas.style.left = (fullW/2 - width/2) + "px";
+		canvas.style.width = width + "px";
+		canvas.style.height = height + "px";
+	}
+	
+	
+	function draw(dt:Float) {
+		
+		shader.reseed(Math.random() * 10000, Math.random() * 10000);
+		
+		newSliceTimer += dt;
+		if(newSliceTimer >= newSliceTime){
+			newSliceTimer=0;
+			pickNewStripTargets();
+		}
 
-	function added(e) {
-		removeEventListener(Event.ADDED_TO_STAGE, added);
-		stage.addEventListener(Event.RESIZE, resize);
-		#if ios
-		haxe.Timer.delay(init, 100); // iOS 6
-		#else
-		init();
-		#end
+		var fNow = Browser.window.performance.now();
+		// update shader parameters  
+		var a = Math.sin(.5+fNow/10500);
+		var b = Math.sin(fNow/6666 + Math.cos(fNow/7777));
+		var c = Math.sin(.5+fNow/10000);
+		//shader.setYOffsetData(3*c, .5 + b*.2, 8*a);
+
+		shader.fadePosition = (Math.sin(fNow / 30000) + 1) * .5;
+		
+		updateStrips();
+  
 	}
 	
-	function resize(e) {
-		if (!inited) init();
+	function updateStrips() {
+		
+		// lerp slices toward targets...
+		var c;
+		var f=0.0002; // speed
+		for (i in 0...sliceCount) {
+			c = currentStrips[i];
+			currentStrips[i] = c + (targetStrips[i]-c) * f;    
+		}
+		
+		shader.setStrips(currentStrips);
 	}
 	
-	public static function main() {
-		// entry point
-		Lib.current.stage.align = flash.display.StageAlign.TOP_LEFT;
-		Lib.current.stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
-		Lib.current.addChild(new Main());
+	function pickNewStripTargets() {
+		var stripWidth = 1.0 / sliceCount;
+		for (i in 0...sliceCount) {
+			targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;  
+		}
 	}
+	
+	static function main() new Main();
 }
-

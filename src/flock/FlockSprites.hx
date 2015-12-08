@@ -3,16 +3,13 @@ package flock;
 import flock.FieldPoint.RndPoint;
 import hxsignal.Signal;
 import motion.easing.*;
+import pixi.core.particles.ParticleContainer;
+import pixi.core.sprites.Sprite;
+import pixi.core.textures.Texture;
 import worker.FlockData;
 
 import net.rezmason.utils.workers.Golem;
 import net.rezmason.utils.workers.QuickBoss;
-
-import openfl.Assets;
-import openfl.display.BitmapData;
-import openfl.display.Sprite;
-import openfl.display.Tilesheet;
-import openfl.geom.Rectangle;
 
 import util.Env;
 import util.MathUtil;
@@ -23,14 +20,8 @@ import worker.FlockData.FlockBoss;
 import worker.FlockData.FlockUpdateData;
 
 
-@:final class FlockTiles extends Sprite {
+class FlockSprites extends ParticleContainer {
 	
-	#if debugDraw
-	public var debugVisible:Bool = true;
-	var debugTilesheet	:Tilesheet;
-	var debugDrawList	:FloatArray;
-	#end
-
 	var inputs			:Inputs;
 	var needData		:Bool = true;
     var flocker			:FlockBoss = null;
@@ -40,8 +31,7 @@ import worker.FlockData.FlockUpdateData;
 	var flockUpdateData	:FlockUpdateData;
 	
 	var smooth			:Bool;
-	var boidBitmap		:BitmapData;
-	var tilesheet		:Tilesheet;
+	var boidTexture		:Texture;
 	
 	var phase			:Float;
 	var count			:Int;
@@ -53,38 +43,21 @@ import worker.FlockData.FlockUpdateData;
 	
 	public function new(inputs:Inputs) {
 		
-		super();
+		count = 512;
+		drawCount = count << 1;// (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
+	
+		super(drawCount, [false, true, false, false, true]);
 		
 		this.inputs = inputs;
 		
 		updated = new Signal<FloatArray->Int->Void>();
 		smooth = false;
 		
-		#if android
-			count = 768;
-		#elseif cpp
-			count = 1024;
-		#else
-			count = 512;
-		#end
-		
-		drawCount = (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
-		
-		#if debugDraw
-			var data = [-10.0, -10.0, 0, /**/-10.0, -10.0, 1, /**/-10.0, -10.0, 2, /**/-10.0, -10.0, 3, /**/-10.0, -10.0, 4, /**/-10.0, -10.0, 5];
-			debugTilesheet = new Tilesheet(Assets.getBitmapData('img/rgbcmy8.png'));
-			for (i in 0...3) {
-				for (j in 0...2) debugTilesheet.addTileRect(new Rectangle (i*8, j*8, 8, 8));
-			}
-			#if js
-				debugDrawList = new FloatArray(data);
-			#else
-				debugDrawList = data;
-			#end
-		#end
-		
-		tilesheet = new Tilesheet(boidBitmap = Assets.getBitmapData("img/blurBlob.png"));
-		tilesheet.addTileRect(new Rectangle (0, 0, boidBitmap.width, boidBitmap.height));
+		var texture = Texture.fromImage("img/blurBlob.png");
+		for (i in 0...drawCount) {
+			var s = new Sprite(texture);
+			addChild(s);
+		}
 		
 		phase = (Math.random() - .5) * (Math.PI * 4);
 		createWorker();
@@ -114,16 +87,12 @@ import worker.FlockData.FlockUpdateData;
 			//new RndPoint(4,   .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
 		];
 		
-		#if js
 		pointForces = new FloatArray(fx);
-		#else
-		pointForces	= fx;
-		#end
 		
 		// create this container now, send it with each update
 		flockUpdateData = { type:Data.TYPE_UPDATE, pointForces:pointForces, scaleFactor:Env.scaleFactor };
 		
-		flocker = new FlockBoss(Golem.rise('assets/golem/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
+		flocker = new FlockBoss(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
 		flocker.send(cast { type:Data.TYPE_INIT, count:count, screenDensity:Env.screenDensity } ); // init
 	}
@@ -133,9 +102,17 @@ import worker.FlockData.FlockUpdateData;
 		
 		if (needData) return;
 		
-		graphics.clear();
-		tilesheet.drawTiles(graphics, cast drawList, smooth, Tilesheet.TILE_SCALE | Tilesheet.TILE_ALPHA, drawCount);
-		needData = true;
+		var j = 0;
+		var child;
+		while (i < drawList.length) {
+			child = getChildAt(j);
+			child.x = drawList[i];
+			child.y = drawList[i + 1];
+			child.scale = drawList[i + 2];
+			child.alpha = drawList[i + 3];
+			i += 4;
+			j++;
+		}
 		
 		var f; var j;
 		var n = forces.length; var pt;
@@ -149,19 +126,11 @@ import worker.FlockData.FlockUpdateData;
 			pointForces[j + 2] = pt.f;
 		}
 		
-		#if debugDraw
-		if (debugVisible) debugDraw();
-		#end
-		
 		//
 		var mIndx = (forces.length * 3);
 		var v = inputs.mouseVelocity;
 		var f = pointForces[mIndx + 2];
-		#if mobile
-		if (v > 0) {
-		#else
 		if (v > 0 && inputs.mouseIsDown) {
-		#end		
 			pointForces[mIndx] 		= mouseX;
 			pointForces[mIndx + 1]	= mouseY;
 			pointForces[mIndx + 2]	= f + (v - f) * 5e-12;
@@ -172,22 +141,10 @@ import worker.FlockData.FlockUpdateData;
 		updated.emit(drawList, drawCount);
 		
 		flockUpdateData.scaleFactor = Env.scaleFactor;
+		
 		// send the update request + data...
 		flocker.send(flockUpdateData);
 	}
-	
-	#if debugDraw
-	inline function debugDraw() {
-		var n = Std.int(pointForces.length / 3);
-		for (i in 0...n) {
-			var j = i * 3;
-			debugDrawList[j] 	 = pointForces[j];
-			debugDrawList[j + 1] = pointForces[j + 1];
-			debugDrawList[j + 2] = pointForces[j + 2] > .0 ? 2 : 0;
-		}
-		debugTilesheet.drawTiles(graphics, cast debugDrawList, false);
-	}
-	#end
 	
 	
 	/**

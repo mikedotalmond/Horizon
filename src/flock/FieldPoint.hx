@@ -19,7 +19,7 @@ import util.MathUtil;
 	var f:Float;
  }
 
-@:allow(flock.FlockTiles)
+@:allow(flock.FlockSprites)
 class FieldPoint {
 	
 	static inline var Width = 1280;
@@ -29,7 +29,7 @@ class FieldPoint {
 	var next:Pt;
 	var last:Pt;
 	var current:Pt;
-	var seed:#if js Int#else UInt#end;
+	var seed:Int
 	
 	function new(seed=1){
 		this.seed = seed < 1 ? 1 : (seed >= rMax ? rMax-1 : seed);

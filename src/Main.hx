@@ -32,27 +32,25 @@ class Main extends Application {
 	var targetStrips:Float32Array;
 	var currentStrips:Float32Array;
 	
-	//var lastTime:Float= 0;
-	var newSliceTimer:Float=0;
+	var newSliceTimer:Float = 0;
+	var fSprites:FlockSprites;
+	var bg:Sprite;
 
-	static inline var newSliceTime = 6000;
-	static inline var sliceCount = 7; // vertical slice count (max of 7)
-	var bg:pixi.core.sprites.Sprite;
-	var fSprites:flock.FlockSprites;
-
+	static inline var NewSliceTime = 6000; // millis
+	static inline var SliceCount = 7; // vertical slice count (max of 7)
 	
 	public function new() {
 		super();
 		
 		antialias = false;
 		backgroundColor =0;
-		start('webgl', Browser.document.getElementById('pixi-container'));
+		start(Application.WEBGL, Browser.document.getElementById('pixi-container'));
 		renderer.resize(1280, 720);
 		
 		setup();
 		
 		onUpdate = draw;
-		_onWindowResize(null);
+		onWindowResize(null);
 	}
 	
 	
@@ -76,10 +74,10 @@ class Main extends Application {
 		
 		fSprites = new FlockSprites();
 		stage.addChild(fSprites);
-		
 	}
 	
-	override function _onWindowResize(event:Event) {
+	
+	override function onWindowResize(event:Event) {
 		
 		var fullW = Browser.window.innerWidth;
 		var fullH = Browser.window.innerHeight;
@@ -104,35 +102,38 @@ class Main extends Application {
 	
 	function draw(dt:Float) {
 		
-		fSprites.update(Browser.window.performance.now()/1000,dt/1000);
+		var nowSeconds = now / 1000;
+		
+		fSprites.update(nowSeconds, dt / 1000);
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
 		
 		newSliceTimer += dt;
-		if(newSliceTimer >= newSliceTime){
-			newSliceTimer=0;
+		if(newSliceTimer >= NewSliceTime){
+			newSliceTimer = 0;
 			pickNewStripTargets();
 		}
 
-		var fNow = Browser.window.performance.now();
 		// update shader parameters  
-		var a = Math.sin(.5+fNow/10500);
-		var b = Math.sin(fNow/6666 + Math.cos(fNow/7777));
-		var c = Math.sin(.5+fNow/10000);
+		var a = Math.sin(.5 + nowSeconds / 10.5);
+		var b = Math.sin(nowSeconds / 6.666 + Math.cos(nowSeconds / 7.777));
+		var c = Math.sin(.5 + nowSeconds / 10);
+		// TODO: fix these values... ranges are not right 
 		//shader.setYOffsetData(3*c, .5 + b*.2, 8*a);
-
-		shader.fadePosition = (Math.sin(fNow / 30000) + 1) * .5;
+	
+		
+		shader.fadePosition = (Math.sin(now / 30000) + 1) * .5;
 		
 		updateStrips();
-  
 	}
+	
 	
 	function updateStrips() {
 		
 		// lerp slices toward targets...
 		var c;
 		var f=0.0002; // speed
-		for (i in 0...sliceCount) {
+		for (i in 0...SliceCount) {
 			c = currentStrips[i];
 			currentStrips[i] = c + (targetStrips[i]-c) * f;    
 		}
@@ -141,8 +142,8 @@ class Main extends Application {
 	}
 	
 	function pickNewStripTargets() {
-		var stripWidth = 1.0 / sliceCount;
-		for (i in 0...sliceCount) {
+		var stripWidth = 1.0 / SliceCount;
+		for (i in 0...SliceCount) {
 			targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;  
 		}
 	}

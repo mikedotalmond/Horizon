@@ -29,23 +29,21 @@ import util.MathUtil;
 	public static inline var MAX_DIST:Float = 16 * 16;
 	public static inline var MAX_DX:Float = 16;
 	
+	
 	// spatial partitioning
 	static inline var CellSize = 32;
 	static inline var CellCountX = Std.int(1280 / CellSize);
 	static inline var CellCountY = Std.int(576 / CellSize);
 	static inline var CellCount = CellCountX * CellCountY;
 	
-	
 	static inline var YCount = CellCountX * CellCountY;
 	
 	
-	var count			:Int;
-	var dataOffset		:Int;
-	var boids			:Boid;
-	var drawList		:Float32Array;
-	var cells			:Array<Array<Boid>>;
-	var screenDensity	:Float;
-	
+	var count:Int;
+	var dataOffset:Int;
+	var boids:Boid;
+	var drawList:Float32Array;
+	var cells:Array<Array<Boid>>;
 	
 	override function process(data:WorkerData):Float32Array {
 		switch(data.type) {
@@ -57,16 +55,9 @@ import util.MathUtil;
 	
 	
 	function init(data:FlockInitData) {
-		screenDensity = data.screenDensity;
-		if (screenDensity > 1) screenDensity = screenDensity * .5;
 		cells = [for (i in 0...CellCount) [] ];
 		createBoids(data.count);
 	}
-	
-	static inline var Data_X		:Int = 0;
-	static inline var Data_Y		:Int = 1;
-	static inline var Data_Scale	:Int = 2;
-	static inline var Data_Alpha	:Int = 3;
 	
 	function createBoids(count:Int) {
 		
@@ -75,53 +66,53 @@ import util.MathUtil;
 		var last 	= null;
 		var data 	= [];
 		
-		var cloneOffset = count * FlockData.TILE_FIELDS;
+		var cloneOffset = count * FlockData.FIELD_COUNT;
 		var b; var index; var size; var scale; var speed; var turnSpeed;
 		
 		for (i in 0...count) {
 			
-			size 			= 1.5 + Math.random(); 
-			scale 			= .7 + Math.random() * .2;
-			speed 			= .85 + Math.random() * .4;
-			turnSpeed 		= TURN_SPEED + TURN_SPEED * (Math.random()) * 1.5;
+			size = 1.5 + Math.random(); 
+			scale = .7 + Math.random() * .2;
+			speed = .85 + Math.random() * .4;
+			turnSpeed = TURN_SPEED + TURN_SPEED * (Math.random()) * 1.5;
 			
-			b 				= new Boid(i, size, scale, speed, turnSpeed);
+			b = new Boid(i, size, scale, speed, turnSpeed);
 			
-			b.x 			= 64 + Math.random() * (WIDTH-128);
-			b.y 			= 64 + Math.random() * 200;
-			b.alpha 		= .4 + Math.random() * .2;
-			b.angle 		= Math.random() * MathUtil.TWO_PI;
+			b.x = 64 + Math.random() * (WIDTH-128);
+			b.y = 64 + Math.random() * 200;
+			b.alpha = .4 + Math.random() * .2;
+			b.angle = Math.random() * MathUtil.TWO_PI;
 			
-			index 						= i * FlockData.TILE_FIELDS;
-			data[index + Data_X] 		= b.x;
-			data[index + Data_Y] 		= b.y;
-			data[index + Data_Scale] 	= b.drawScale = ((b.scale * size / 4.8) * screenDensity);
-			data[index + Data_Alpha] 	= b.alpha;
+			index = i * FlockData.FIELD_COUNT;
+			data[index + FlockData.DATA_X] = b.x;
+			data[index + FlockData.Data_Y] = b.y;
+			data[index + FlockData.DATA_SCALE] = b.drawScale = (b.scale * size / 4.8);
+			data[index + FlockData.DATA_ALPHA] = b.alpha;
 			
-			index 						+= cloneOffset;
-			data[index + Data_X] 		= b.x;
-			data[index + Data_Y] 		= b.y;
-			data[index + Data_Scale] 	= .25;
-			data[index + Data_Alpha]	= 0.04;// b.alpha * .2;
+			index += cloneOffset;
+			data[index + FlockData.DATA_X] = b.x;
+			data[index + FlockData.DATA_Y] = b.y;
+			data[index + FlockData.DATA_SCALE] = .25;
+			data[index + FlockData.DATA_ALPHA] = 0.04;// b.alpha * .2;
 			
 			if (boids == null) boids = b;
 			else last.next = b;
 			
 			b.first = boids;
-			last 	= b;
+			last = b;
 		}
 		
-		// Add X_DATA_POINTS+Y_DATA_POINTS extra fields for flock data...
-		dataOffset 	= data.length;
-		data 		= data.concat([for(i in 0...(FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS)) .0]);
-		
+		// Add (X_DATA_POINTS + Y_DATA_POINTS) extra fields to the end for some flock data bits...
+		dataOffset 	= data.length; // 0...dataOffset is the boid data, dataOffset...data.length is extra data
+		data = data.concat([for(i in 0...(FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS)) .0]);
+		//
 		drawList = new Float32Array(data);
 	}
 	
 	
 	function update(data:FlockUpdateData) {
 		
-		var cloneOffset = count * FlockData.TILE_FIELDS;
+		var cloneOffset = count * FlockData.FIELD_COUNT;
 		
 		var pointForces = data.pointForces;
 		var fieldCount = Std.int(pointForces.length / 3);
@@ -135,11 +126,10 @@ import util.MathUtil;
 		}
 		
 		var b = boids;
-		var cellSize = 32;
 		var offset = dataOffset;
 		
-		var bX, bY, bXi, bYi, tmpA, tmpB;
 		var absV = .0;
+		var bX, bY, bXi, bYi, tmpA, tmpB;
 		var end = FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS;
 		
 		// reset x/y data
@@ -178,8 +168,8 @@ import util.MathUtil;
 			if (Math.random() > .666 && b.y < 400) {
 				b.step();
 			} else {
-				bXi = Std.int(bx / cellSize);
-				bYi = Std.int((by + GridYOffset) / cellSize);
+				bXi = Std.int(bx / CellSize);
+				bYi = Std.int((by + GridYOffset) / CellSize);
 				getClosest(b, c[bXi + bYi * CellCountX]);
 				b.update(fieldCount, pointForces);
 			}
@@ -187,7 +177,7 @@ import util.MathUtil;
 			b.closest = null;
 			b.closestDist = 0;
 			
-			index = b.index * FlockData.TILE_FIELDS;
+			index = b.index * FlockData.FIELD_COUNT;
 			
 			var alpha = b.alpha - (b.rotationChange);
 			if (alpha < 0.01) alpha = b.alpha * (1 - alpha) * 1.333;

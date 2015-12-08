@@ -21,6 +21,10 @@ import worker.FlockData.FlockUpdateData;
 
 class FlockSprites extends ParticleContainer {
 	
+	static public inline var BoidCount:Int = 512;
+	static public inline var SpriteCount:Int = BoidCount << 1;
+	static public inline var DataSize:Int = SpriteCount * FlockData.FIELD_COUNT;
+	
 	var needData		:Bool = true;
     var flocker			:FlockBoss = null;
 	
@@ -28,30 +32,19 @@ class FlockSprites extends ParticleContainer {
 	var pointForces		:Float32Array;
 	var flockUpdateData	:FlockUpdateData;
 	
-	var phase			:Float;
-	var count			:Int;
-	
+	var drawDataCount	:Int;
 	var drawList		:Float32Array;
-	var drawCount		:Int;
-	
-	public var updated(default, null):Signal<Float32Array->Int->Void>;
 	
 	public function new() {
 		
-		count = 512;
-		drawCount = (count * FlockData.TILE_FIELDS) << 1; // * 2 for the reflection-esq clones...
-	
-		super(drawCount, {scale:true, position:true, alpha:true});
-		
-		updated = new Signal<Float32Array->Int->Void>();
+		super(SpriteCount, {scale:true, position:true, alpha:true});
 		
 		var texture = Texture.fromImage("img/blurBlob.png");
-		for (i in 0...drawCount) {
+		for (i in 0...SpriteCount) {
 			var s = new Sprite(texture);
 			addChild(s);
 		}
 		
-		phase = (Math.random() - .5) * (Math.PI * 4);
 		createWorker();
 	}
 	
@@ -64,17 +57,13 @@ class FlockSprites extends ParticleContainer {
 			-10, -10, .000005,
 			-10, -10, .000005,
 			-10, -10, .000005,
-			//-10, -10, .0,
-			//-10, -10, .0,
 			640, 220, 0, /* mouse controlled */
 		];
 		
 		forces = [
-			new RndPoint(4.8, .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
-			new RndPoint(4.6, .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
-			new RndPoint(4.4, .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
-			//new RndPoint(4.2, .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
-			//new RndPoint(4,   .00000001, Linear.easeNone, Std.int(Math.random()*0xffffff)),
+			new RndPoint(4.8, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(4.6, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(4.4, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
 		];
 		
 		pointForces = new Float32Array(fx);
@@ -84,29 +73,36 @@ class FlockSprites extends ParticleContainer {
 		
 		flocker = new FlockBoss(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
-		flocker.send(cast { type:Data.TYPE_INIT, count:count, screenDensity:1 } ); // init
+		flocker.send(cast { type:Data.TYPE_INIT, count:BoidCount, screenDensity:1 } ); // init
 	}
 	
 	
+	/**
+	 * @param	now seconds
+	 * @param	dt seconds
+	 */
 	public function update(now:Float, dt:Float) {	
 		
 		if (needData) return;
 		
 		var j = 0;
-		var child;
 		var i = 0;
-		while (i < drawCount) {
+		var child;
+		while (i < DataSize) {
+			
 			child = getChildAt(j);
-			child.x = drawList[i];
-			child.y = drawList[i + 1];
-			child.scale.set(drawList[i + 2]);
-			child.alpha = drawList[i + 3];
-			i += 4;
+			
+			child.x = drawList[i + FlockData.DATA_X];
+			child.y = drawList[i + FlockData.DATA_Y];
+			child.scale.set(drawList[i + FlockData.DATA_SCALE]);
+			child.alpha = drawList[i + FlockData.DATA_ALPHA];
+			
+			i += FlockData.FIELD_COUNT;
 			j++;
 		}
 		
-		var f; var j;
-		var n = forces.length; var pt;
+		var f; var j; var pt;
+		var n = forces.length;
 		for (i in 0...n) {
 			j = i * 3;
 			f = forces[i];
@@ -129,14 +125,10 @@ class FlockSprites extends ParticleContainer {
 			pointForces[mIndx + 2]	= f > 5e-12 ? f * .8 : 0;
 		//}
 		
-		updated.emit(drawList, drawCount);
-		
-		flockUpdateData.scaleFactor = 1;// Env.scaleFactor;
-		
-		// send the update request + data...
+		// send the update request
+		//flockUpdateData.scaleFactor = 1;
 		flocker.send(flockUpdateData);
 	}
-	
 	
 	/**
 	 * flock data from worker

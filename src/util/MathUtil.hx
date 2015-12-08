@@ -26,34 +26,13 @@ package util;
 	public static inline var toRADIANS	:Float = PI / 180;
 	public static inline var toDEGREES	:Float = 180 / PI;
 	
+	public static inline function abs(x:Float):Float return (x < 0) ? -x : x;
+	public static inline function min(x:Float, y:Float):Float return (x < y) ? x : y;
+	public static inline function max(x:Float, y:Float):Float return (x > y) ? x : y;
 	
-	public static inline function abs(x:Float):Float {
-		return (x < 0) ? ( -x) : x;
-	}
+	public static inline function absI(x:Int):Int return (x < 0) ? -x : x;
+	public static inline function minI(x:Int, y:Int):Int return (x < y) ? x : y;
+	public static inline function maxI(x:Int, y:Int):Int return (x > y) ? x : y;
 	
-	public static inline function min(x:Float, y:Float):Float {
-		return (x < y) ? x : y;
-	}
-	
-	public static inline function max(x:Float, y:Float):Float {
-		return (x > y) ? x : y;
-	}
-	
-	public static inline function absI(x:Int):Int {
-		return (x < 0) ? ( -x) : x;
-	}
-	
-	public static inline function minI(x:Int, y:Int):Int {
-		return (x < y) ? x : y;
-	}
-	
-	public static inline function maxI(x:Int, y:Int):Int {
-		return (x > y) ? x : y;
-	}
-	
-	#if js
 	public static inline function rnd(seed:Int):Int return (seed * 16807) % 2147483647;
-	#else
-	public static inline function rnd(seed:UInt):UInt return (seed * 16807) % 2147483647;
-	#end
 }

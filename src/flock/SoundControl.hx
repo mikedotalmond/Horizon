@@ -114,7 +114,7 @@ class SoundControl {
 		var buffer = noteBuffers[noteIndex];
 		
 		samples.buffer = buffer;
-		samples.attack = .25;
+		samples.attack = .01 + (volume * 4) * Math.random() * (SOUND_RANGE - .01);
 		samples.release = SOUND_RANGE - samples.attack;
 		samples.volume = volume;
 		samples.offset = SOUND_BEGIN;

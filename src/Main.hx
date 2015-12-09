@@ -141,7 +141,8 @@ class Main extends Application {
 		var c = .005 * Math.sin(.5 + t / 10);
 		shader.setYOffsetData(c, .5 + b*.2, a);
 		
-		shader.fadePosition = (Math.sin(t / 30) + 1) * .5;
+		var p = (Math.sin(t / 30) + 1) * .5;
+		shader.fadePosition = p;
 	}
 	
 	

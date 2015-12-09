@@ -26,20 +26,18 @@ import worker.FlockData;
 class SoundControl {
 	
 	static inline var MAX_POLYPHONY			:Int = 128;
-	static inline var SOUND_END				:Int = 2100;
-	static inline var SOUND_BEGIN			:Int = 900;
-	static inline var SOUND_RANGE			:Int = SOUND_END - SOUND_BEGIN;
-	static inline var MIN_RETRIGGER_DURATION:Int = Std.int(SOUND_RANGE / 2);
-	static inline var MIN_RETRIGGER_POSITION:Int = SOUND_BEGIN + MIN_RETRIGGER_DURATION;
+	static inline var SOUND_BEGIN			:Float = 0.9;
+	static inline var SOUND_END				:Float = 2.1;
+	static inline var SOUND_RANGE			:Float = SOUND_END - SOUND_BEGIN;
 	static inline var AUDIO_TYPE			:String = 'ogg';
 	// need to add mp3/aac here to support IE... but meh.
 
-	var noteIDs			:Array<String>;
+	var noteIDs:Array<String>;
 	
-	var playTime		:Float = .0;
-	var triggerTime		:Float = .25;
-	var noteWeights		:Float32Array;
-	var volumeWeights	:Float32Array;
+	var playTime:Float = .0;
+	var triggerTime:Float = .25;
+	var noteWeights:Float32Array;
+	var volumeWeights:Float32Array;
 	
 	var t:PositionAccessActuator;
 	var noteBuffers:Array<AudioBuffer>;
@@ -47,7 +45,6 @@ class SoundControl {
 	var paused:Bool=true;
 	var context:AudioContext;
 	var outGain:GainNode;
-	var reverb:ConvolverNode;
 	var samples:Samples;
 	
 	public function new(flock:FlockSprites) {
@@ -62,21 +59,20 @@ class SoundControl {
 		var samplesOutput = context.createGain();
 		var drySignal = context.createGain();
 		var wetSignal = context.createGain();
-		reverb = context.createConvolver();
+		var reverb = context.createConvolver();
 		
 		samples = new Samples(context, samplesOutput);
 		samplesOutput.connect(wetSignal);
 		samplesOutput.connect(drySignal);
 		
 		outGain.gain.setValueAtTime(.5, context.currentTime);
-		drySignal.gain.setValueAtTime(.75, context.currentTime);
-		wetSignal.gain.setValueAtTime(.25, context.currentTime);
+		drySignal.gain.setValueAtTime(.2, context.currentTime);
+		wetSignal.gain.setValueAtTime(.8, context.currentTime);
 		
 		wetSignal.connect(reverb);
 		
 		reverb.connect(outGain);
 		drySignal.connect(outGain);
-		
 		
 		samples.loadBuffer('audio/impulses/Hall 5_dc.wav', function(buffer) {
 			trace('reverb impulse loaded');
@@ -117,14 +113,13 @@ class SoundControl {
 		
 		var buffer = noteBuffers[noteIndex];
 		
-		// play it pitched up a bit (5 tones)
-		var rate = 1;// NoteFrequencyUtil.rateFromNote(5, 0, 0);
-		
-		samples.playbackRate = rate;
-		samples.attack = 0;
-		samples.release = buffer.duration / rate;
+		samples.buffer = buffer;
+		samples.attack = .25;
+		samples.release = SOUND_RANGE - samples.attack;
 		samples.volume = volume;
-		samples.playSample(buffer, delay);
+		samples.offset = SOUND_BEGIN;
+		samples.duration = SOUND_RANGE;
+		samples.playSample(null, delay);
 	}
 	
 	/**

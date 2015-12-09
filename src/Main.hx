@@ -1,15 +1,18 @@
 package;
 
 import flock.FlockSprites;
+import flock.SoundControl;
 import js.Browser;
 import js.html.Event;
 import js.html.Float32Array;
+import motion.actuators.SimpleActuator;
 import net.rezmason.utils.workers.QuickBoss;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
+import util.Inputs;
 
 
 /**
@@ -27,13 +30,15 @@ class Main extends Application {
 	var targetStrips:Float32Array;
 	var currentStrips:Float32Array;
 	
-	var inputs:Inputs;
+	var inputs:util.Inputs;
 	
 	var newSliceTimer:Float = 0;
 	var flock:FlockSprites;
 
-	static inline var NewSliceTime = 6000; // millis
+	static inline var NewSliceTime = 6; // seconds
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
+	var soundControl:flock.SoundControl;
+	var seconds:Float=0;
 	
 	public function new() {
 		
@@ -44,8 +49,12 @@ class Main extends Application {
 		start(Application.WEBGL, Browser.document.getElementById('pixi-container'));
 		renderer.resize(1280, 720);
 		
-		inputs = new Inputs(stage);
+		SimpleActuator.getTime = function () return seconds;
+		
+		inputs = new util.Inputs(stage);
 		inputs.hidePointerWhenIdle = true;
+		
+		soundControl = new SoundControl(flock);
 		
 		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
@@ -106,13 +115,16 @@ class Main extends Application {
 	
 	function update(elapsed:Float) {
 		
-		var seconds = elapsed / 1000;
-		var dt = elapsed - lastTime; 
-		lastTime = elapsed;
+		seconds = elapsed / 1000;
+		var dt = (seconds - lastTime);
+		lastTime = seconds;
+		
+		SimpleActuator.stage_onEnterFrame();
 		
 		inputs.update(elapsed);
 		
-		flock.update(seconds, dt / 1000);
+		var newFlockData = flock.update(seconds, dt);
+		if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
 		updateShaderParameters(seconds);
 		

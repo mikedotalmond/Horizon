@@ -1,4 +1,4 @@
-package;
+package util;
 
 import haxe.Timer;
 import js.Browser;

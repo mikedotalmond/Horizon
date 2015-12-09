@@ -7,6 +7,7 @@ import motion.easing.*;
 import pixi.core.particles.ParticleContainer;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
+import util.Inputs;
 import worker.FlockData;
 
 import net.rezmason.utils.workers.Golem;
@@ -33,10 +34,11 @@ class FlockSprites extends ParticleContainer {
 	var flockUpdateData	:FlockUpdateData;
 	
 	var drawDataCount	:Int;
-	var drawList		:Float32Array;
-	var inputs			:Inputs;
+	var inputs			:util.Inputs;
 	
-	public function new(inputs:Inputs) {
+	public var drawList(default,null):Float32Array;
+	
+	public function new(inputs:util.Inputs) {
 		
 		super(SpriteCount, {scale:true, position:true, alpha:true});
 		
@@ -85,9 +87,9 @@ class FlockSprites extends ParticleContainer {
 	 * @param	now seconds
 	 * @param	dt seconds
 	 */
-	public function update(now:Float, dt:Float) {	
+	public function update(now:Float, dt:Float):Bool {	
 		
-		if (needData) return;
+		if (needData) return false;
 		
 		var j = 0;
 		var i = 0;
@@ -132,6 +134,8 @@ class FlockSprites extends ParticleContainer {
 		// send the update request
 		//flockUpdateData.scaleFactor = 1;
 		flocker.send(flockUpdateData);
+		
+		return true;
 	}
 	
 	/**

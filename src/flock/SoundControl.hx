@@ -1,8 +1,15 @@
 package flock;
 
 import flock.FlockSprites;
+import js.html.audio.AudioBuffer;
+import js.html.audio.AudioContext;
+import js.html.audio.ConvolverNode;
+import js.html.audio.GainNode;
 import js.html.Float32Array;
 import motion.Actuate;
+import tones.AudioBase;
+import tones.Samples;
+import tones.utils.NoteFrequencyUtil;
 
 import motion.actuators.PropertyDetails;
 import motion.actuators.SimpleActuator;
@@ -18,7 +25,7 @@ import worker.FlockData;
 
 class SoundControl {
 	
-	static inline var MAX_POLYPHONY			:Int = 12;
+	static inline var MAX_POLYPHONY			:Int = 128;
 	static inline var SOUND_END				:Int = 2100;
 	static inline var SOUND_BEGIN			:Int = 900;
 	static inline var SOUND_RANGE			:Int = SOUND_END - SOUND_BEGIN;
@@ -27,33 +34,97 @@ class SoundControl {
 	static inline var AUDIO_TYPE			:String = 'ogg';
 	// need to add mp3/aac here to support IE... but meh.
 
-	var noteIDs		:Array<String>;
+	var noteIDs			:Array<String>;
 	
 	var playTime		:Float = .0;
 	var triggerTime		:Float = .25;
 	var noteWeights		:Float32Array;
 	var volumeWeights	:Float32Array;
 	
+	var t:PositionAccessActuator;
+	var noteBuffers:Array<AudioBuffer>;
+	var loadCount:Int=0;
+	var paused:Bool=true;
+	var context:AudioContext;
+	var outGain:GainNode;
+	var reverb:ConvolverNode;
+	var samples:Samples;
 	
 	public function new(flock:FlockSprites) {
 		
 		noteWeights = new Float32Array([for(c in 0...FlockData.Y_DATA_POINTS) .0]);
 		volumeWeights = new Float32Array([for (c in 0...FlockData.X_DATA_POINTS) .0]);
 		
+		context = AudioBase.createContext();
+		outGain = context.createGain();
+		outGain.connect(context.destination);
+		
+		var samplesOutput = context.createGain();
+		var drySignal = context.createGain();
+		var wetSignal = context.createGain();
+		reverb = context.createConvolver();
+		
+		samples = new Samples(context, samplesOutput);
+		samplesOutput.connect(wetSignal);
+		samplesOutput.connect(drySignal);
+		
+		outGain.gain.setValueAtTime(.5, context.currentTime);
+		drySignal.gain.setValueAtTime(.75, context.currentTime);
+		wetSignal.gain.setValueAtTime(.25, context.currentTime);
+		
+		wetSignal.connect(reverb);
+		
+		reverb.connect(outGain);
+		drySignal.connect(outGain);
+		
+		
+		samples.loadBuffer('audio/impulses/Hall 5_dc.wav', function(buffer) {
+			trace('reverb impulse loaded');
+			reverb.buffer = buffer;
+		});
+		
 		var notes = '';
 		for (octave in 2...6) notes += 'C$octave,C_$octave,D$octave,D_$octave,E$octave,F$octave,F_$octave,G$octave,G_$octave,A$octave,A_$octave,B$octave${octave==5?"":","}';
 		noteIDs = notes.split(',');
 		
-		for (id in noteIDs) {
-			//sounds.set(id, Assets.getSound('audio/notes/note_${id}.${AUDIO_TYPE}'));
-		}
+		loadCount = 0;
+		noteBuffers = [];
 		
-		noteTimeUpdate();
+		for (i in 0...noteIDs.length) {
+			samples.loadBuffer('audio/notes/note_${noteIDs[i]}.${AUDIO_TYPE}', audioDecoded.bind(_, i));
+		}
 	}
 	
-	public function play(noteIndex:Int=0, delay:Float = 0, volume:Float=1) {
-		//
-		//trace(noteIndex, delay, volume);
+	
+	function audioDecoded(buffer:AudioBuffer, index:Int) {
+		noteBuffers[index] = buffer;
+		loadCount++;
+		if (loadCount == noteIDs.length) {
+			trace('all loaded');
+			// start
+			noteTimeUpdate();
+			paused = false;
+		}
+	}
+	
+	public function play(noteIndex:Int = 0, delay:Float = 0, volume:Float = 1) {
+		
+		if (paused) return;
+		//trace(samples.polyphony);
+		if(samples.polyphony > MAX_POLYPHONY) {
+			//return;
+		}
+		
+		var buffer = noteBuffers[noteIndex];
+		
+		// play it pitched up a bit (5 tones)
+		var rate = 1;// NoteFrequencyUtil.rateFromNote(5, 0, 0);
+		
+		samples.playbackRate = rate;
+		samples.attack = 0;
+		samples.release = buffer.duration / rate;
+		samples.volume = volume;
+		samples.playSample(buffer, delay);
 	}
 	
 	/**
@@ -63,6 +134,7 @@ class SoundControl {
 	 * @param	now
 	 */	
 	public function update(dt:Float, data:Float32Array, offset:Int) {
+		if (paused) return;
 		
 		playTime += dt;
 		
@@ -115,7 +187,6 @@ class SoundControl {
 		}
 	}
 	
-	var t:PositionAccessActuator;
 	function noteTimeUpdate() {
 		
 		var time = .15 + .25 * Math.random();

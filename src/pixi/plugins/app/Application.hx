@@ -137,13 +137,6 @@ class Application {
 	 */
 	public var stage(default, null):Container;
 
-	/**
-	 * millis since application started
-	 * @return
-	 */
-	public var now(get, never):Float;
-	inline function get_now() return NOW_TIME();
-	
 	
 	public static inline var AUTO:String = "auto";
 	public static inline var RECOMMENDED:String = "recommended";
@@ -251,17 +244,4 @@ class Application {
 			renderer.render(stage);
 		}
 	}
-	
-	
-	static function __init__() {
-		if (Reflect.hasField(Browser.window, 'performance') && Reflect.isFunction(Browser.window.performance.now)) {
-			NOW_TIME = Browser.window.performance.now;
-		} else {
-			INIT_TIME = Date.now().getTime();
-			NOW_TIME = function() return Date.now().getTime() - INIT_TIME;
-		}
-	}
-	
-	static var INIT_TIME:Float = 0;
-	static var NOW_TIME:Void->Float;
 }

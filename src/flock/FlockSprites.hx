@@ -34,10 +34,13 @@ class FlockSprites extends ParticleContainer {
 	
 	var drawDataCount	:Int;
 	var drawList		:Float32Array;
+	var inputs			:Inputs;
 	
-	public function new() {
+	public function new(inputs:Inputs) {
 		
 		super(SpriteCount, {scale:true, position:true, alpha:true});
+		
+		this.inputs = inputs;
 		
 		var texture = Texture.fromImage("img/blurBlob.png");
 		for (i in 0...SpriteCount) {
@@ -116,15 +119,15 @@ class FlockSprites extends ParticleContainer {
 		
 		//
 		var mIndx = (forces.length * 3);
-		//var v = inputs.mouseVelocity;
+		var v = inputs.mouseVelocity;
 		var f = pointForces[mIndx + 2];
-		//if (v > 0 && inputs.mouseIsDown) {
-			//pointForces[mIndx] 		= mouseX;
-			//pointForces[mIndx + 1]	= mouseY;
-			//pointForces[mIndx + 2]	= f + (v - f) * 5e-12;
-		//} else {
-			pointForces[mIndx + 2]	= f > 5e-12 ? f * .8 : 0;
-		//}
+		if (v > 0 && inputs.mouseIsDown) {
+			pointForces[mIndx] = inputs.mouseX;
+			pointForces[mIndx + 1] = inputs.mouseY;
+			pointForces[mIndx + 2] = f + (v - f) * 5e-12;
+		} else {
+			pointForces[mIndx + 2] = f > 5e-12 ? f * .8 : 0;
+		}
 		
 		// send the update request
 		//flockUpdateData.scaleFactor = 1;

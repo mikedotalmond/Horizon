@@ -4,16 +4,12 @@ import flock.FlockSprites;
 import js.Browser;
 import js.html.Event;
 import js.html.Float32Array;
-import net.rezmason.utils.workers.Golem;
 import net.rezmason.utils.workers.QuickBoss;
-import pixi.core.display.Container;
-import pixi.core.graphics.Graphics;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
-import worker.FlockData.FlockBoss;
 
 
 /**
@@ -26,20 +22,21 @@ typedef TestThread = QuickBoss<Int, Int>;
 class Main extends Application {
 
 	//
-	var container:Container;
-	var shader:pixi.filters.HorizonStripShader;
-	var bg2:Sprite;
+	var lastTime:Float = 0;
+	var shader:HorizonStripShader;
 	var targetStrips:Float32Array;
 	var currentStrips:Float32Array;
 	
+	var inputs:Inputs;
+	
 	var newSliceTimer:Float = 0;
-	var fSprites:FlockSprites;
-	var bg:Sprite;
+	var flock:FlockSprites;
 
 	static inline var NewSliceTime = 6000; // millis
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
 	
 	public function new() {
+		
 		super();
 		
 		antialias = false;
@@ -47,35 +44,40 @@ class Main extends Application {
 		start(Application.WEBGL, Browser.document.getElementById('pixi-container'));
 		renderer.resize(1280, 720);
 		
-		setup();
-		
-		onUpdate = draw;
-		onWindowResize(null);
-	}
-	
-	
-	function setup() {
+		inputs = new Inputs(stage);
+		inputs.hidePointerWhenIdle = true;
 		
 		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
 		pickNewStripTargets();
 		
-		// setup pixi
-		container = new Container();
-		stage.addChild(container);
-		//renderer.backgroundColor = 0x10101F;
+		setupPixi();
+		
+		onUpdate = update;
+		onWindowResize(null);
+	}
+	
+	
+	function setupPixi() {
+		
 		var t1 = Texture.fromImage("img/horizon-bg1.jpg");
 		var t2 = Texture.fromImage("img/horizon-bg2.jpg");
+		var t3 = Texture.fromImage("img/horizon-bg3.jpg");
+		var t4 = Texture.fromImage("img/horizon-bg4.jpg");
 		
-		bg = new Sprite(t1);
+		var bg = new Sprite(t1);
+		bg.interactive = true;
 		stage.addChild(bg);
+		
 		shader = new HorizonStripShader(t1, t2);
 		shader.setStrips(currentStrips);
 		
-		bg.filters = [shader];
+		var blur = new BlurFilter();
+		blur.blur = .5;
+		bg.filters = [shader, blur];
 		
-		fSprites = new FlockSprites();
-		stage.addChild(fSprites);
+		flock = new FlockSprites(inputs);
+		stage.addChild(flock);
 	}
 	
 	
@@ -101,17 +103,37 @@ class Main extends Application {
 		canvas.style.height = height + "px";
 	}
 	
-	var lastTime:Float = 0;
-	function draw(elapsed:Float) {
+	
+	function update(elapsed:Float) {
 		
+		var seconds = elapsed / 1000;
 		var dt = elapsed - lastTime; 
 		lastTime = elapsed;
 		
-		var tSeconds = elapsed / 1000;
+		inputs.update(elapsed);
 		
-		fSprites.update(tSeconds, dt / 1000);
+		flock.update(seconds, dt / 1000);
+		
+		updateShaderParameters(seconds);
+		
+		updateSlices(dt);
+	}
+	
+	
+	inline function updateShaderParameters(t:Float) {
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
+		
+		var a = .5 * Math.sin(.5 + t / 10.5);
+		var b = Math.sin(t / 6.666 + Math.cos(t / 7.777));
+		var c = .005 * Math.sin(.5 + t / 10);
+		shader.setYOffsetData(c, .5 + b*.2, a);
+		
+		shader.fadePosition = (Math.sin(t / 30) + 1) * .5;
+	}
+	
+	
+	inline function updateSlices(dt) {
 		
 		newSliceTimer += dt;
 		if(newSliceTimer >= NewSliceTime){
@@ -119,23 +141,9 @@ class Main extends Application {
 			pickNewStripTargets();
 		}
 		
-		// update shader parameters  
-		var a = Math.sin(.5 + tSeconds / 10.5);
-		var b = Math.sin(tSeconds / 6.666 + Math.cos(tSeconds / 7.777));
-		var c = Math.sin(.5 + tSeconds / 10);
-		// TODO: fix these values... ranges are not right 
-		//shader.setYOffsetData(3*c, .5 + b*.2, 8*a);
-		
-		shader.fadePosition = (Math.sin(now / 30000) + 1) * .5;
-		
-		updateStrips();
-	}
-	
-	
-	function updateStrips() {
 		// lerp slices toward targets...
 		var c;
-		var f=0.0002; // speed
+		var f=0.0008; // speed
 		for (i in 0...SliceCount) {
 			c = currentStrips[i];
 			currentStrips[i] = c + (targetStrips[i]-c) * f;    
@@ -144,13 +152,15 @@ class Main extends Application {
 		shader.setStrips(currentStrips);
 	}
 	
+	
 	function pickNewStripTargets() {
-		//trace('pickNewStripTargets');
 		var stripWidth = 1.0 / SliceCount;
-		for (i in 0...SliceCount) {
-			targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;  
-		}
+		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;
 	}
+	
+	
+	//
+	
 	
 	static function main() new Main();
 }

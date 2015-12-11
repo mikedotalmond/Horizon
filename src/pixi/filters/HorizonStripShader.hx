@@ -50,11 +50,10 @@ class HorizonStripShader extends AbstractFilter {
 	inline function set_fadePosition(value:Float) return uniforms.position.value = value;
 	
 	public var textureA(get,set):Texture;
-	inline function get_textureA() return uniforms.texture.value;
-	inline function set_textureA(value:Texture) return uniforms.texture.value = value;
+	inline function get_textureA() return uniforms.textureA.value;
+	inline function set_textureA(value:Texture) return uniforms.textureA.value = value;
 	
 	public var textureB(get,set):Texture;
-	inline function get_textureB() return uniforms.texture.value;
-	inline function set_textureB(value:Texture) return uniforms.texture.value = value;
-	
+	inline function get_textureB() return uniforms.textureB.value;
+	inline function set_textureB(value:Texture) return uniforms.textureB.value = value;
 }

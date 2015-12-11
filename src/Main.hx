@@ -3,6 +3,10 @@ package;
 import flock.FlockSprites;
 import js.html.Element;
 import js.html.KeyboardEvent;
+import motion.easing.Linear;
+import motion.easing.Quad;
+import motion.easing.Sine;
+import pixi.core.graphics.Graphics;
 import util.Screenfull;
 //import flock.SoundControl;
 import js.Browser;
@@ -38,12 +42,13 @@ class Main extends Application {
 	var newSliceTimer:Float = 0;
 	var flock:FlockSprites;
 
-	static inline var NewSliceTime = 6; // seconds
+	static inline var NewSliceTime = 3; // seconds
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
 	//var soundControl:flock.SoundControl;
 	
 	var seconds:Float = 0;
 	var container:Element;
+	var textures:Array<Texture>;
 	
 	public function new() {
 		
@@ -94,6 +99,8 @@ class Main extends Application {
 		var t3 = Texture.fromImage("img/horizon-bg3.jpg");
 		var t4 = Texture.fromImage("img/horizon-bg4.jpg");
 		
+		textures = [t1,t2,t3,t4];
+		
 		var bg = new Sprite(t1);
 		bg.interactive = true;
 		stage.addChild(bg);
@@ -107,6 +114,11 @@ class Main extends Application {
 		
 		flock = new FlockSprites(inputs);
 		stage.addChild(flock);
+		
+		#if debugDraw
+		debugGraphics = new Graphics();
+		stage.addChild(debugGraphics);
+		#end
 	}
 	
 	
@@ -146,13 +158,13 @@ class Main extends Application {
 		var newFlockData = flock.update(seconds, dt);
 		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
-		updateShaderParameters(seconds);
+		updateShaderParameters(seconds, dt);
 		
 		updateSlices(dt);
 	}
 	
 	
-	inline function updateShaderParameters(t:Float) {
+	inline function updateShaderParameters(t:Float, dt:Float) {
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
 		
@@ -161,9 +173,28 @@ class Main extends Application {
 		var c = .005 * Math.sin(.5 + t / 10);
 		shader.setYOffsetData(c, .5 + b*.2, a);
 		
-		var p = (Math.sin(t / 30) + 1) * .5;
-		shader.fadePosition = p;
+		
+		fadePhase += (dt / 30);
+		if (fadePhase >= 1) {
+			
+			fadePhase = 0;
+			shader.fadePosition = 0;
+			
+			var lastIndex = bgTextureIndex;
+			
+			bgTextureIndex++;
+			if (bgTextureIndex == textures.length) bgTextureIndex = 0;
+			
+			shader.textureA = textures[lastIndex];
+			shader.textureB = textures[bgTextureIndex];
+			
+		} else {
+			shader.fadePosition = Sine.easeInOut.calculate(fadePhase);
+		}
 	}
+	
+	var bgTextureIndex:Int = 1;
+	var fadePhase:Float = 0;
 	
 	
 	inline function updateSlices(dt) {
@@ -176,19 +207,39 @@ class Main extends Application {
 		
 		// lerp slices toward targets...
 		var c;
-		var f=0.0008; // speed
+		var f = 0.001; // speed
 		for (i in 0...SliceCount) {
 			c = currentStrips[i];
 			currentStrips[i] = c + (targetStrips[i]-c) * f;    
 		}
 		
 		shader.setStrips(currentStrips);
+		
+		#if debugDraw
+		debugDraw();
+		#end
 	}
+	
+	#if debugDraw 
+	var debugGraphics:Graphics;
+	function debugDraw() {
+		debugGraphics.clear();
+		for (i in 0...SliceCount) {
+			debugGraphics.lineStyle(2,0);
+			debugGraphics.moveTo(currentStrips[i]*1280,0);
+			debugGraphics.lineTo(currentStrips[i]*1280,720);
+			debugGraphics.lineStyle(2,0xff0000);
+			debugGraphics.moveTo(targetStrips[i]*1280,0);
+			debugGraphics.lineTo(targetStrips[i]*1280,720);
+		}
+	}
+	#end
 	
 	
 	function pickNewStripTargets() {
 		var stripWidth = 1.0 / SliceCount;
-		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + Math.random() * stripWidth;
+		//for (i in 0...SliceCount) targetStrips[i] = Math.random();
+		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random()) * stripWidth;
 	}
 	
 	

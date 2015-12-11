@@ -5,7 +5,7 @@ precision mediump int;
 precision highp float;
 #endif
 
-#define SLICE_COUNT 6.0;
+#define SLICE_COUNT 7.0;
 
 uniform sampler2D textureA;
 uniform sampler2D textureB;
@@ -28,47 +28,53 @@ float rnd(vec2 x)
 
 void main(void) {
   
-  float xSlicePosition = vTextureCoord.x * SLICE_COUNT;
-  int sliceIndex = int(xSlicePosition);
+  float vx = vTextureCoord.x;
   
   // prandom numbers for this pixel
   float rX = rnd(seeds.x * vTextureCoord);
   float rY = rnd(seeds.y * vTextureCoord);
   
   // get y position, and add offsets to scale and position some Y noise
-  float y = vTextureCoord.y + (rY - yOffsets.z) * vTextureCoord.y * (fract(vTextureCoord.x) - yOffsets.y) * yOffsets.x;
+  float y = vTextureCoord.y + (rY - yOffsets.z) * vTextureCoord.y * (fract(vx) - yOffsets.y) * yOffsets.x;
   
   vec2 sliceACoord = vec2(0, y);
   vec2 sliceBCoord = vec2(0, y);
   
-  if(sliceIndex == 0) {
-	sliceACoord.s = stripsA[0];
-	sliceBCoord.s = stripsA[1];
-  } else if(sliceIndex == 1){
-	sliceACoord.s = stripsA[1];
-	sliceBCoord.s = stripsA[2];
-  } else if(sliceIndex == 2){
-	sliceACoord.s = stripsA[2];
-	sliceBCoord.s = stripsA[3];
-  } else if(sliceIndex == 3){
-	sliceACoord.s = stripsA[3];
-	sliceBCoord.s = stripsB[0];
-  } else if(sliceIndex == 4){
-	sliceACoord.s = stripsB[0];
-	sliceBCoord.s = stripsB[1];
-  } else { //if(sliceIndex == 5){
-	sliceACoord.s = stripsB[1];
-	sliceBCoord.s = stripsB[2];
+  float f2;
+  
+  if(vx < stripsA[1]) {
+	sliceACoord.x = stripsA[0];
+	sliceBCoord.x = stripsA[1];
   }
+  else if(vx < stripsA[2]) 	{
+	sliceACoord.x = stripsA[1];
+	sliceBCoord.x = stripsA[2];
+  }
+  else if(vx < stripsA[3]) {
+	sliceACoord.x = stripsA[2];
+	sliceBCoord.x = stripsA[3];
+  }
+  else if(vx < stripsB[0]) {
+	sliceACoord.x = stripsA[3];
+	sliceBCoord.x = stripsB[0];
+  }
+  else if(vx < stripsB[1]) {
+	sliceACoord.x = stripsB[0];
+	sliceBCoord.x = stripsB[1];
+  }
+  else {
+	sliceACoord.x = stripsB[1];
+	sliceBCoord.x = stripsB[2];
+  }
+  
+  f2 =  (vx - sliceACoord.x) / (sliceBCoord.x - sliceACoord.x);
  
   // lerp between the two sampling positions
-  float f2 = xSlicePosition - float(sliceIndex);
-  
+ 
   vec4 mixA = ( 1.0 - f2 ) * texture2D(textureA, sliceACoord) + f2 * texture2D(textureA, sliceBCoord);
   vec4 mixB = ( 1.0 - f2 ) * texture2D(textureB, sliceACoord) + f2 * texture2D(textureB, sliceBCoord);
   
-  
-  vec4 mix = position * mixA + (1.0-position) * mixB;
+  vec4 mix = (1.0-position) * mixA + position * mixB;
   
   // add noise (monochromatic)
   mix += (rX - 0.5) * .06; // noiseAmt

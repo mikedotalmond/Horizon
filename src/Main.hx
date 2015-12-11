@@ -1,6 +1,9 @@
 package;
 
 import flock.FlockSprites;
+import js.html.Element;
+import js.html.KeyboardEvent;
+import util.Screenfull;
 //import flock.SoundControl;
 import js.Browser;
 import js.html.Event;
@@ -38,15 +41,19 @@ class Main extends Application {
 	static inline var NewSliceTime = 6; // seconds
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
 	//var soundControl:flock.SoundControl;
-	var seconds:Float=0;
+	
+	var seconds:Float = 0;
+	var container:Element;
 	
 	public function new() {
 		
 		super();
 		
+		container = Browser.document.getElementById('pixi-container');
+		
 		antialias = false;
 		backgroundColor =0;
-		start(Application.WEBGL, Browser.document.getElementById('pixi-container'));
+		start(Application.WEBGL, container);
 		renderer.resize(1280, 720);
 		
 		SimpleActuator.getTime = function () return seconds;
@@ -64,6 +71,19 @@ class Main extends Application {
 		
 		onUpdate = update;
 		onWindowResize(null);
+		
+		if (Screenfull != null && Screenfull.enabled) {
+			
+			inputs.keyDown.connect(function(code:Int) {
+				if (code == KeyboardEvent.DOM_VK_ESCAPE) Screenfull.exit();
+				else if(code == KeyboardEvent.DOM_VK_F) Screenfull.toggle(container);
+			});
+			
+			Browser.document.addEventListener(Screenfull.raw.fullscreenchange, function (_) {
+				trace('fullscreenchange - isFullscreen:${Screenfull.isFullscreen}');
+				onWindowResize(null);
+			});
+		}
 	}
 	
 	

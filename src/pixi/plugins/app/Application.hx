@@ -210,9 +210,6 @@ class Application {
 		else renderer = new WebGLRenderer(width, height, renderingOptions);
 		
 		if (roundPixels) renderer.roundPixels = true;
-		
-		Browser.document.body.appendChild(renderer.view);
-		
 		if (autoResize) Browser.window.onresize = onWindowResize;
 		TimeUtil.frameTick.connect(onRequestAnimationFrame);
 	}

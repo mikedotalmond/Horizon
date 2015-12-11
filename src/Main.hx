@@ -1,7 +1,7 @@
 package;
 
 import flock.FlockSprites;
-import flock.SoundControl;
+//import flock.SoundControl;
 import js.Browser;
 import js.html.Event;
 import js.html.Float32Array;
@@ -37,7 +37,7 @@ class Main extends Application {
 
 	static inline var NewSliceTime = 6; // seconds
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
-	var soundControl:flock.SoundControl;
+	//var soundControl:flock.SoundControl;
 	var seconds:Float=0;
 	
 	public function new() {
@@ -54,7 +54,7 @@ class Main extends Application {
 		inputs = new util.Inputs(stage);
 		inputs.hidePointerWhenIdle = true;
 		
-		soundControl = new SoundControl(flock);
+		//soundControl = new SoundControl(flock);
 		
 		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
@@ -124,7 +124,7 @@ class Main extends Application {
 		inputs.update(elapsed);
 		
 		var newFlockData = flock.update(seconds, dt);
-		if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
+		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
 		updateShaderParameters(seconds);
 		

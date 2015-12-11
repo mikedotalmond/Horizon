@@ -25,7 +25,7 @@ import worker.FlockData;
 
 class SoundControl {
 	
-	static inline var MAX_POLYPHONY			:Int = 128;
+	static inline var MAX_POLYPHONY			:Int = 8;
 	static inline var SOUND_BEGIN			:Float = 0.9;
 	static inline var SOUND_END				:Float = 2.1;
 	static inline var SOUND_RANGE			:Float = SOUND_END - SOUND_BEGIN;
@@ -56,6 +56,15 @@ class SoundControl {
 		outGain = context.createGain();
 		outGain.connect(context.destination);
 		
+		var outComp = context.createDynamicsCompressor();
+		outComp.connect(outGain);
+		//threshold - The decibel value above which the compression will start taking effect. Its default value is -24, with a nominal range of -100 to 0.
+		//knee - A decibel value representing the range above the threshold where the curve smoothly transitions to the "ratio" portion. Its default value is 30, with a nominal range of 0 to 40.
+		//ratio - The amount of dB change in input for a 1 dB change in output. Its default value is 12, with a nominal range of 1 to 20.	
+		//reduction - A read-only decibel value for metering purposes, representing the current amount of gain reduction that the compressor is applying to the signal. If fed no signal the value will be 0 (no gain reduction). The nominal range is -20 to 0.
+		//attack - The amount of time (in seconds) to reduce the gain by 10dB. Its default value is 0.003, with a nominal range of 0 to 1.		
+		//release - The amount of time (in seconds) to increase the gain by 10dB. Its default value is 0.250, with a nominal range of 0 to 1.
+		
 		var samplesOutput = context.createGain();
 		var drySignal = context.createGain();
 		var wetSignal = context.createGain();
@@ -66,16 +75,19 @@ class SoundControl {
 		samplesOutput.connect(drySignal);
 		
 		outGain.gain.setValueAtTime(.5, context.currentTime);
-		drySignal.gain.setValueAtTime(.2, context.currentTime);
-		wetSignal.gain.setValueAtTime(.8, context.currentTime);
+		drySignal.gain.setValueAtTime(.75, context.currentTime);
+		wetSignal.gain.setValueAtTime(.25, context.currentTime);
 		
 		wetSignal.connect(reverb);
 		
-		reverb.connect(outGain);
-		drySignal.connect(outGain);
+		reverb.connect(outComp);
+		drySignal.connect(outComp);
 		
-		samples.loadBuffer('audio/impulses/Hall 5_dc.wav', function(buffer) {
+		//samples.loadBuffer('audio/impulses/Lexicon 300 - Glossy Plate - Preset 302_dc.wav', function(buffer) {
+		samples.loadBuffer('audio/impulses/hall.wav', function(buffer) {
+		//samples.loadBuffer('audio/impulses/Hall 5_dc.wav', function(buffer) {
 			trace('reverb impulse loaded');
+			reverb.normalize = true;
 			reverb.buffer = buffer;
 		});
 		
@@ -114,7 +126,7 @@ class SoundControl {
 		var buffer = noteBuffers[noteIndex];
 		
 		samples.buffer = buffer;
-		samples.attack = .01 + (volume * 4) * Math.random() * (SOUND_RANGE - .01);
+		samples.attack = .25 + Math.random() * SOUND_RANGE;
 		samples.release = SOUND_RANGE - samples.attack;
 		samples.volume = volume;
 		samples.offset = SOUND_BEGIN;
@@ -162,8 +174,8 @@ class SoundControl {
 					play(i, triggerTime * wNote * wVolume * 2, wVolume * triggerTime);
 					volumeWeights[i] = noteWeights[i] = .0;
 				} else {
-					volumeWeights[i] *= .666;
-					noteWeights[i] *= .666;
+					volumeWeights[i] *= (1 / 3);
+					noteWeights[i] *=  (1 / 3);
 				}
 			}
 		}
@@ -199,9 +211,9 @@ class SoundControl {
 			var p2 = t.position;
 			p2 *= p2;
 			if (Math.random() > p2) {
-				return (noteWeight < .4 && noteWeight > .3) || (volumeWeight > .25 && volumeWeight < .3);
+				return (noteWeight < .2 && noteWeight > .5) || (volumeWeight > .1 && volumeWeight < .3);
 			} else if (Math.random() > p2) {
-				return (noteWeight > .7 || noteWeight < .3) && (volumeWeight > .05 && volumeWeight < .55);
+				return (noteWeight > .8 || noteWeight < .2) && (volumeWeight > .15 && volumeWeight < .25);
 			}
 		}
 		return false;

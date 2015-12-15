@@ -1,25 +1,24 @@
 package;
 
 import flock.FlockSprites;
-import js.html.Element;
-import js.html.KeyboardEvent;
-import motion.easing.Linear;
-import motion.easing.Quad;
-import motion.easing.Sine;
-import pixi.core.graphics.Graphics;
-import util.Screenfull;
-//import flock.SoundControl;
 import js.Browser;
+import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
+import js.html.KeyboardEvent;
 import motion.actuators.SimpleActuator;
+import motion.easing.Sine;
 import net.rezmason.utils.workers.QuickBoss;
+import pixi.core.graphics.Graphics;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
+
 import util.Inputs;
+import util.Screenfull;
+
 
 
 /**
@@ -110,6 +109,7 @@ class Main extends Application {
 		
 		var blur = new BlurFilter();
 		blur.blur = .5;
+		
 		bg.filters = [shader, blur];
 		
 		flock = new FlockSprites(inputs);
@@ -121,7 +121,7 @@ class Main extends Application {
 		#end
 	}
 	
-	
+	var scaleFactor:Float = 1.0;
 	override function onWindowResize(event:Event) {
 		
 		var fullW = Browser.window.innerWidth;
@@ -133,9 +133,11 @@ class Main extends Application {
 		if (r1 < r2) {
 			width = fullW;
 			height = 720 * r1;
+			scaleFactor = r1;
 		} else {
 			height = fullH;
 			width = 1280 * r2;
+			scaleFactor = r2;
 		}
 		
 		canvas.style.top = (fullH/2 - height/2) + "px";
@@ -155,7 +157,7 @@ class Main extends Application {
 		
 		inputs.update(elapsed);
 		
-		var newFlockData = flock.update(seconds, dt);
+		var newFlockData = flock.update(seconds, dt, scaleFactor);
 		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
 		updateShaderParameters(seconds, dt);
@@ -173,8 +175,7 @@ class Main extends Application {
 		var c = .005 * Math.sin(.5 + t / 10);
 		shader.setYOffsetData(c, .5 + b*.2, a);
 		
-		
-		fadePhase += (dt / 30);
+		fadePhase += (dt / 60);
 		if (fadePhase >= 1) {
 			
 			fadePhase = 0;
@@ -207,7 +208,7 @@ class Main extends Application {
 		
 		// lerp slices toward targets...
 		var c;
-		var f = 0.001; // speed
+		var f = 0.0015; // speed
 		for (i in 0...SliceCount) {
 			c = currentStrips[i];
 			currentStrips[i] = c + (targetStrips[i]-c) * f;    
@@ -224,6 +225,7 @@ class Main extends Application {
 	var debugGraphics:Graphics;
 	function debugDraw() {
 		debugGraphics.clear();
+		debugGraphics.alpha = .2;
 		for (i in 0...SliceCount) {
 			debugGraphics.lineStyle(2,0);
 			debugGraphics.moveTo(currentStrips[i]*1280,0);
@@ -238,8 +240,7 @@ class Main extends Application {
 	
 	function pickNewStripTargets() {
 		var stripWidth = 1.0 / SliceCount;
-		//for (i in 0...SliceCount) targetStrips[i] = Math.random();
-		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random()) * stripWidth;
+		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
 	}
 	
 	

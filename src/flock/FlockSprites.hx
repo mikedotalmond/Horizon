@@ -22,8 +22,8 @@ import worker.FlockData.FlockUpdateData;
 
 class FlockSprites extends ParticleContainer {
 	
-	static public inline var BoidCount:Int = 512;
-	static public inline var SpriteCount:Int = BoidCount << 1;
+	static public inline var BoidCount:Int = 640;
+	static public inline var SpriteCount:Int = BoidCount << 1; // x2 for th 'reflection' clones
 	static public inline var DataSize:Int = SpriteCount * FlockData.FIELD_COUNT;
 	
 	var needData		:Bool = true;
@@ -79,7 +79,7 @@ class FlockSprites extends ParticleContainer {
 		
 		flocker = new FlockBoss(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
-		flocker.send(cast { type:Data.TYPE_INIT, count:BoidCount, screenDensity:1 } ); // init
+		flocker.send(cast { type:Data.TYPE_INIT, count:BoidCount } ); // init
 	}
 	
 	
@@ -87,7 +87,7 @@ class FlockSprites extends ParticleContainer {
 	 * @param	now seconds
 	 * @param	dt seconds
 	 */
-	public function update(now:Float, dt:Float):Bool {	
+	public function update(now:Float, dt:Float, scaleFactor:Float=1):Bool {	
 		
 		if (needData) return false;
 		
@@ -132,7 +132,7 @@ class FlockSprites extends ParticleContainer {
 		}
 		
 		// send the update request
-		//flockUpdateData.scaleFactor = 1;
+		flockUpdateData.scaleFactor = scaleFactor;
 		flocker.send(flockUpdateData);
 		
 		return true;

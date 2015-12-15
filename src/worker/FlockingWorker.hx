@@ -8,6 +8,7 @@ package worker;
 import js.html.Float32Array;
 import net.rezmason.utils.workers.BasicWorker;
 
+import worker.FlockData;
 import worker.FlockData.FlockInitData;
 import worker.FlockData.FlockUpdateData;
 
@@ -22,7 +23,7 @@ import util.MathUtil;
 	public static inline var WIDTH:Float = 1280;
 	public static inline var HEIGHT:Float = 500;
 	
-	public static inline var TURN_SPEED:Float = .035;
+	public static inline var TURN_SPEED:Float = .025;
 	public static inline var GridYOffset = 64;
 	
 	public static inline var MIN_DIST:Float = 2.5 * 2.5;
@@ -73,7 +74,7 @@ import util.MathUtil;
 			
 			size = 1.5 + Math.random(); 
 			scale = .7 + Math.random() * .2;
-			speed = .85 + Math.random() * .4;
+			speed = .75 + Math.random() * .4;
 			turnSpeed = TURN_SPEED + TURN_SPEED * (Math.random()) * 1.5;
 			
 			b = new Boid(i, size, scale, speed, turnSpeed);
@@ -85,7 +86,7 @@ import util.MathUtil;
 			
 			index = i * FlockData.FIELD_COUNT;
 			data[index + FlockData.DATA_X] = b.x;
-			data[index + FlockData.Data_Y] = b.y;
+			data[index + FlockData.DATA_Y] = b.y;
 			data[index + FlockData.DATA_SCALE] = b.drawScale = (b.scale * size / 4.8);
 			data[index + FlockData.DATA_ALPHA] = b.alpha;
 			
@@ -164,8 +165,8 @@ import util.MathUtil;
 			
 			bx = b.x; by = b.y;
 			
-			// limit 'thinking' to n% of the time for more.. unpredictable movement. think more near water.
-			if (Math.random() > .666 && b.y < 400) {
+			// limit boid 'thinking' for more.. unpredictable movement. think more near water.
+			if (b.y < 400 && Math.random() > .5) {
 				b.step();
 			} else {
 				bXi = Std.int(bx / CellSize);
@@ -181,24 +182,24 @@ import util.MathUtil;
 			
 			var alpha = b.alpha - (b.rotationChange);
 			if (alpha < 0.01) alpha = b.alpha * (1 - alpha) * 1.333;
-			d[index + Data_Alpha] = alpha;
+			d[index + FlockData.DATA_ALPHA] = alpha;
 			
-			d[index + Data_X] = bx;
-			d[index + Data_Y] = by;
+			d[index + FlockData.DATA_X] = bx;
+			d[index + FlockData.DATA_Y] = by;
 			
 			tmpA = b.drawScale;
 			tmpB = tmpA / scaleFactor;
-			d[index + Data_Scale] = MathUtil.min(tmpA, tmpB);
+			d[index + FlockData.DATA_SCALE] = MathUtil.min(tmpA, tmpB);
 			
 			// 'reflection' clones			
 			index += cloneOffset;
-			d[index + Data_X] = bx;
-			d[index + Data_Y] = 512 + (HEIGHT - b.y) * .15; 
+			d[index + FlockData.DATA_X] = bx;
+			d[index + FlockData.DATA_Y] = 512 + (HEIGHT - b.y) * .15; 
 			
 			yScale = 1 - (by / HEIGHT); // x pos
-			d[index + Data_Scale] = b.scale + b.scale * yScale * .7; // y pos
+			d[index + FlockData.DATA_SCALE] = b.scale + b.scale * yScale * .7; // y pos
 			
-			d[index + Data_Alpha] = 0.03 - .03 * yScale;
+			d[index + FlockData.DATA_ALPHA] = 0.03 - .03 * yScale;
 			
 			b = b.next;
 		}

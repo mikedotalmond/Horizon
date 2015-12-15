@@ -16,9 +16,10 @@ import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
 import sound.SeascapeRegions;
-
+import tones.Samples;
 import util.Inputs;
 import util.Screenfull;
+
 
 
 
@@ -94,10 +95,9 @@ class Main extends Application {
 	
 	function setupAudio() {
 		trace(SeascapeRegions.data);
-		
-		
+		trace(Samples.canPlayType('audio/ogg'));
+		trace(Samples.canPlayType('audio/mp3'));
 	}
-	
 	
 	function setupPixi() {
 		

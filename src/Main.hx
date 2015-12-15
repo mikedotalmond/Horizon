@@ -15,6 +15,7 @@ import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
+import sound.SeascapeRegions;
 
 import util.Inputs;
 import util.Screenfull;
@@ -72,6 +73,7 @@ class Main extends Application {
 		pickNewStripTargets();
 		
 		setupPixi();
+		setupAudio();
 		
 		onUpdate = update;
 		onWindowResize(null);
@@ -88,6 +90,12 @@ class Main extends Application {
 				onWindowResize(null);
 			});
 		}
+	}
+	
+	function setupAudio() {
+		trace(SeascapeRegions.data);
+		
+		
 	}
 	
 	

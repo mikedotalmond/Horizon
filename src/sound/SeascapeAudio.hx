@@ -81,6 +81,7 @@ class SeascapeAudio {
 	
 	
 	function onItemBegin(id:Int, time:Float) {
+		trace('onItemBegin $id');
 		
 		var item = samples.activeItems.get(id);
 		var region = regions[activeRegions.get(id)];
@@ -104,6 +105,8 @@ class SeascapeAudio {
 	
 	function onItemEnd(id:Int) {
 		activeRegions.remove(id);
+		trace('onItemEnd $id');
+		trace(samples.polyphony);
 	}
 	
 	
@@ -117,7 +120,7 @@ class SeascapeAudio {
 		samples.offset = region.start;
 		samples.duration = region.duration;
 		
-		var id = samples.playSample(null, delayBy + samples.sampleTime, false);
+		var id = samples.playSample(null, delayBy, false);
 		
 		activeRegions.set(id, index);
 		

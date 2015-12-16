@@ -56,7 +56,7 @@ class SeascapeAudio {
 	
 	function onDecoded(buffer:AudioBuffer) {
 		trace('buffer ready');
-		trace(buffer);
+		//trace(buffer);
 		
 		this.buffer = buffer;
 		ready.emit();

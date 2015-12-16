@@ -132,7 +132,6 @@ class Main extends Application {
 		#end
 	}
 	
-	var scaleFactor:Float = 1.0;
 	override function onWindowResize(event:Event) {
 		
 		var fullW = Browser.window.innerWidth;
@@ -144,11 +143,9 @@ class Main extends Application {
 		if (r1 < r2) {
 			width = fullW;
 			height = 720 * r1;
-			scaleFactor = r1;
 		} else {
 			height = fullH;
 			width = 1280 * r2;
-			scaleFactor = r2;
 		}
 		
 		canvas.style.top = (fullH/2 - height/2) + "px";
@@ -168,7 +165,7 @@ class Main extends Application {
 		
 		inputs.update(elapsed);
 		
-		var newFlockData = flock.update(seconds, dt, scaleFactor);
+		var newFlockData = flock.update(seconds, dt);
 		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
 		updateShaderParameters(seconds, dt);

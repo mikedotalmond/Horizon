@@ -30,5 +30,4 @@ import worker.Data.WorkerData;
 
 @:final typedef FlockUpdateData = {> WorkerData,
 	var pointForces:Float32Array; /* [pX, pY, f, ... ] */
-	var scaleFactor:Float;
 }

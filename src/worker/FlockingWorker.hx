@@ -153,8 +153,6 @@ import util.MathUtil;
 			b = b.next;
 		}
 		
-		var scaleFactor = data.scaleFactor;
-		
 		b = boids;
 		
 		var index;
@@ -186,10 +184,7 @@ import util.MathUtil;
 			
 			d[index + FlockData.DATA_X] = bx;
 			d[index + FlockData.DATA_Y] = by;
-			
-			tmpA = b.drawScale;
-			tmpB = tmpA / scaleFactor;
-			d[index + FlockData.DATA_SCALE] = MathUtil.min(tmpA, tmpB);
+			d[index + FlockData.DATA_SCALE] = b.drawScale;
 			
 			// 'reflection' clones			
 			index += cloneOffset;

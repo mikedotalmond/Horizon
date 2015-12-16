@@ -15,18 +15,17 @@ class SeascapeAudio {
 	
 	public static var regions(default, never):Array<AudioRegion> = SeascapeRegions.parse('res/seascape_regions.csv');
 	
-	var ready:Signal<Void->Void>;
-	var error:Signal<String->Void>;
-	var loadProgress:Signal<Float->Void>;
-	var bufferLoaded:Signal<Void->Void>;
+	public var isReady(default, null):Bool;
+	public var ready(default, null):Signal<Void->Void>;
+	public var error(default, null):Signal<String->Void>;
+	public var loadProgress(default, null):Signal<Float->Void>;
+	public var bufferLoaded(default, null):Signal<Void->Void>;
 	
 	var context:AudioContext;
 	var arrayBuffer:ArrayBuffer;
 	var audioBuffer:AudioBuffer;
 	var samples:Samples;
 	var activeRegions:Map<Int, Int>;
-	
-	public var isReady(default, null):Bool;
 	
 	public function new() {
 		
@@ -37,7 +36,6 @@ class SeascapeAudio {
 		samples.itemBegin.connect(onItemBegin);
 		samples.itemRelease.connect(onItemRelease);
 		samples.itemEnd.connect(onItemEnd);
-		samples.timedEvent.connect(onTimedEvent);
 		activeRegions = new Map<Int,Int>();
 		
 		ready = new Signal<Void->Void>();
@@ -46,13 +44,26 @@ class SeascapeAudio {
 		bufferLoaded = new Signal<Void->Void>();
 	}
 	
-	
 	public function loadBuffer() {
+		
 		var audioType =
 			if (Samples.canPlayType('audio/ogg')) 'ogg'
 			else if (Samples.canPlayType('audio/mp3')) 'mp3'
 			else null;
 		
+		if (audioType == null) {
+			error.emit('Browser does not supoprt ogg or mp3 audio playback :\\');
+			return;
+		}
+
+		// region start points tend to be a little bit off after encoding - account for that here.
+		// note: if using lossless (.wav) then no offset should be needed. 
+		//if (audioType == 'ogg') {
+			//regionOffset = 0;
+		//} else {
+			//regionOffset = 0;
+		//}
+			
 		var audioURL = 'audio/seascape.$audioType';
 		
 		#if debug
@@ -64,7 +75,7 @@ class SeascapeAudio {
 	
 	
 	public function decodeBuffer() {
-		// decode shouldn't take too long, but does block execution, so do this when it won't be noticed.
+		// decode blocks execution, so do this when it won't be noticed.
 		Samples.decodeArrayBuffer(arrayBuffer, context, onDecoded, onError);
 	}
 	
@@ -81,17 +92,22 @@ class SeascapeAudio {
 	}
 	
 	function onItemRelease(id:Int, time:Float) {
+		trace('onItemRelease $id');
+		// pick a new region to play
+		var item = samples.activeItems.get(id);
+		var region = regions[activeRegions.get(id)];
+		
+		var maxRelease = region.duration - item.release;
+		var release = maxRelease * .5 + maxRelease * Math.random();
+		playRegion(Std.int(Math.random() * regions.length), 0.25, item.release/1.5, release, time-context.currentTime);
 	}
 	
 	function onItemEnd(id:Int) {
 		activeRegions.remove(id);
 	}
 	
-	function onTimedEvent(id:Int, time:Float) {
-		
-	}
 	
-	function playRegion(index:Int, volume:Float, attack:Float, release:Float, delayBy:Float):Int {
+	public function playRegion(index:Int, volume:Float, attack:Float, release:Float, delayBy:Float):Int {
 		
 		var region = regions[index];
 		
@@ -101,7 +117,7 @@ class SeascapeAudio {
 		samples.offset = region.start;
 		samples.duration = region.duration;
 		
-		var id = samples.playSample(null, delayBy, false);
+		var id = samples.playSample(null, delayBy + samples.sampleTime, false);
 		
 		activeRegions.set(id, index);
 		
@@ -111,20 +127,17 @@ class SeascapeAudio {
 	
 	
 	function onLoadProgress(value:Float) {
-		trace('onProgress $value');
 		loadProgress.emit(value);
 	}
 	
 	
 	function onArrayBufferLoaded(buffer:ArrayBuffer) {
-		trace('onArrayBufferLoaded');
 		arrayBuffer = buffer;
 		bufferLoaded.emit();
 	}
 	
 	
 	function onDecoded(buffer:AudioBuffer) {
-		trace('buffer ready');		
 		audioBuffer = buffer;
 		samples.buffer = buffer;
 		isReady = true;

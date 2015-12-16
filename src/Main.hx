@@ -2,8 +2,6 @@ package;
 
 import flock.FlockSprites;
 import js.Browser;
-import js.Error;
-import js.html.audio.AudioBuffer;
 import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
@@ -18,13 +16,8 @@ import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
 import sound.SeascapeAudio;
-import tones.AudioBase;
-
-import tones.Samples;
 import util.Inputs;
 import util.Screenfull;
-
-
 
 
 /**
@@ -36,24 +29,28 @@ typedef TestThread = QuickBoss<Int, Int>;
 
 class Main extends Application {
 
+	static inline var NewSliceTime = 3; // seconds
+	static inline var SliceCount = 7; // vertical slice count (max of 7)
+	
 	//
 	var lastTime:Float = 0;
 	var shader:HorizonStripShader;
 	var targetStrips:Float32Array;
 	var currentStrips:Float32Array;
 	
-	var inputs:util.Inputs;
+	var inputs:Inputs;
 	
 	var newSliceTimer:Float = 0;
 	var flock:FlockSprites;
 
-	static inline var NewSliceTime = 3; // seconds
-	static inline var SliceCount = 7; // vertical slice count (max of 7)
-	//var soundControl:flock.SoundControl;
-	
 	var seconds:Float = 0;
 	var container:Element;
-	var textures:Array<Texture>;
+	var textures:Array<Texture>;	
+	var bgTextureIndex:Int = 1;
+	var fadePhase:Float = 0;
+	
+	var audio:SeascapeAudio;
+	
 	
 	public function new() {
 		
@@ -71,8 +68,6 @@ class Main extends Application {
 		inputs = new util.Inputs(stage);
 		inputs.hidePointerWhenIdle = true;
 		
-		//soundControl = new SoundControl(flock);
-		
 		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
 		pickNewStripTargets();
@@ -84,23 +79,38 @@ class Main extends Application {
 		onWindowResize(null);
 		
 		if (Screenfull != null && Screenfull.enabled) {
-			
 			inputs.keyDown.connect(function(code:Int) {
 				if (code == KeyboardEvent.DOM_VK_ESCAPE) Screenfull.exit();
 				else if(code == KeyboardEvent.DOM_VK_F) Screenfull.toggle(container);
 			});
-			
-			Browser.document.addEventListener(Screenfull.raw.fullscreenchange, function (_) {
-				trace('fullscreenchange - isFullscreen:${Screenfull.isFullscreen}');
-				onWindowResize(null);
-			});
+			Browser.document.addEventListener(Screenfull.raw.fullscreenchange, onWindowResize.bind(null));
 		}
 	}
 	
+	
 	function setupAudio() {
 		
-		var audio = new SeascapeAudio();
+		audio = new SeascapeAudio();
+		
+		audio.error.connect(function(err) {
+			trace(err);
+		});
+		audio.loadProgress.connect(function(value) {
+			trace('loadProgress:$value');
+		});
+		audio.bufferLoaded.connect(function() {
+			trace('bufferLoaded');
+			audio.decodeBuffer();
+		});
+		audio.ready.connect(function() {
+			trace('ready');
+			
+			audio.playRegion(Std.int(Math.random() * SeascapeAudio.regions.length), 0.25, 1, 1, 1);
+		});
+		
+		audio.loadBuffer();
 	}
+	
 	
 	function setupPixi() {
 		
@@ -131,6 +141,7 @@ class Main extends Application {
 		stage.addChild(debugGraphics);
 		#end
 	}
+	
 	
 	override function onWindowResize(event:Event) {
 		
@@ -174,6 +185,12 @@ class Main extends Application {
 	}
 	
 	
+	function pickNewStripTargets() {
+		var stripWidth = 1.0 / SliceCount;
+		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
+	}
+	
+	
 	inline function updateShaderParameters(t:Float, dt:Float) {
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
@@ -202,9 +219,6 @@ class Main extends Application {
 		}
 	}
 	
-	var bgTextureIndex:Int = 1;
-	var fadePhase:Float = 0;
-	
 	
 	inline function updateSlices(dt) {
 		
@@ -229,6 +243,7 @@ class Main extends Application {
 		#end
 	}
 	
+	
 	#if debugDraw 
 	var debugGraphics:Graphics;
 	function debugDraw() {
@@ -246,14 +261,7 @@ class Main extends Application {
 	#end
 	
 	
-	function pickNewStripTargets() {
-		var stripWidth = 1.0 / SliceCount;
-		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
-	}
-	
 	
 	//
-	
-	
 	static function main() new Main();
 }

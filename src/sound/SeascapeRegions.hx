@@ -6,18 +6,10 @@ package sound;
  * 
  * @author Mike Almond | https://github.com/mikedotalmond
  */
-
-typedef AudioRegion = {
-	var start:Float;
-	var end:Float;
-}
-
 @:access(CompileTime)
 class SeascapeRegions {
 	
-	public static var data:Array<AudioRegion> = parseRegions('res/seascape_regions.csv');
-	
-    macro public static function parseRegions(path:String):ExprOf<Array<AudioRegion>> {
+    macro public static function parse(path:String):ExprOf<Array<AudioRegion>> {
         return CompileTime.toExpr(parseCSVString(path));
     }
 	
@@ -39,7 +31,7 @@ class SeascapeRegions {
 		
 		static function parseEntry(line:String):AudioRegion {
 			// "R1,,0:01.000,0:22.500,0:21.500"
-			// Only care about start and end values, don't bother parsing duration
+			// Only care about start and end values, don't bother parsing name or duration
 			var values = line.split(",").splice(2, 2);
 			return {
 				start : toSeconds(values[0]), 

@@ -2,6 +2,8 @@ package;
 
 import flock.FlockSprites;
 import js.Browser;
+import js.Error;
+import js.html.audio.AudioBuffer;
 import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
@@ -15,7 +17,9 @@ import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
 import pixi.plugins.app.Application;
-import sound.SeascapeRegions;
+import sound.SeascapeAudio;
+import tones.AudioBase;
+
 import tones.Samples;
 import util.Inputs;
 import util.Screenfull;
@@ -94,9 +98,8 @@ class Main extends Application {
 	}
 	
 	function setupAudio() {
-		trace(SeascapeRegions.data);
-		trace(Samples.canPlayType('audio/ogg'));
-		trace(Samples.canPlayType('audio/mp3'));
+		
+		var audio = new SeascapeAudio();
 	}
 	
 	function setupPixi() {

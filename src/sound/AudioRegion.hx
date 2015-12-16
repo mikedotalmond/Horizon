@@ -5,5 +5,5 @@ package sound;
  */
 typedef AudioRegion = {
 	var start:Float;
-	var end:Float;
+	var duration:Float;
 }

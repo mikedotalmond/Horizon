@@ -31,11 +31,11 @@ class SeascapeRegions {
 		
 		static function parseEntry(line:String):AudioRegion {
 			// "R1,,0:01.000,0:22.500,0:21.500"
-			// Only care about start and end values, don't bother parsing name or duration
-			var values = line.split(",").splice(2, 2);
+			// Only care about start and duration values, don't bother parsing name or end
+			var parts = line.split(",");
 			return {
-				start : toSeconds(values[0]), 
-				end	: toSeconds(values[1]),
+				start : toSeconds(parts[2]), 
+				duration : toSeconds(parts[4]),
 			}
 		}
 		

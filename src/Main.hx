@@ -1,19 +1,24 @@
 package;
 
 import flock.FlockSprites;
+import hxsignal.Signal.ConnectionTimes;
 import js.Browser;
 import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
 import js.html.KeyboardEvent;
+import motion.Actuate;
 import motion.actuators.SimpleActuator;
+import motion.easing.Quad;
 import motion.easing.Sine;
 import net.rezmason.utils.workers.QuickBoss;
 import pixi.core.graphics.Graphics;
+import pixi.core.Pixi;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
 import pixi.filters.HorizonStripShader;
+import pixi.loaders.Loader;
 import pixi.plugins.app.Application;
 import sound.SeascapeAudio;
 import util.Inputs;
@@ -51,29 +56,29 @@ class Main extends Application {
 	
 	var audio:SeascapeAudio;
 	
+	var ready:Bool;
+	var loader:AssetLoader;
 	
 	public function new() {
+		ready = false;
 		
 		super();
 		
-		container = Browser.document.getElementById('pixi-container');
-		
-		antialias = false;
-		backgroundColor =0;
-		start(Application.WEBGL, container);
-		renderer.resize(1280, 720);
+		setupPixi();
 		
 		SimpleActuator.getTime = function () return seconds;
 		
-		inputs = new util.Inputs(stage);
+		inputs = new Inputs(stage);
 		inputs.hidePointerWhenIdle = true;
 		
 		currentStrips = new Float32Array([0, .15, .3, .45, .6, .75, .9]);
 		targetStrips = new Float32Array(7);
 		pickNewStripTargets();
 		
-		setupPixi();
-		setupAudio();
+		audio = new SeascapeAudio();
+		
+		loader = new AssetLoader(stage, audio);
+		loader.complete.connect(onAssetsReady, ConnectionTimes.Once);
 		
 		onUpdate = update;
 		onWindowResize(null);
@@ -87,51 +92,22 @@ class Main extends Application {
 		}
 	}
 	
-	
-	function setupAudio() {
+	function onAssetsReady() {
+		audio.start();
 		
-		audio = new SeascapeAudio();
+		textures = loader.textures;
 		
-		audio.error.connect(function(err) {
-			trace(err);
-		});
-		audio.loadProgress.connect(function(value) {
-			trace('loadProgress:$value');
-		});
-		audio.bufferLoaded.connect(function() {
-			trace('bufferLoaded');
-			audio.decodeBuffer();
-		});
-		audio.ready.connect(function() {
-			trace('ready');
-			//audio.playRegion(0, 0.25, .5, 5, 1);
-			audio.playRegion(Std.int(Math.random() * SeascapeAudio.regions.length), 0.15, 2, 2, 1);
-		});
+		var display = new Sprite(textures[0]);
+		display.interactive = true;
+		stage.addChildAt(display, 0);
 		
-		audio.loadBuffer();
-	}
-	
-	
-	function setupPixi() {
-		
-		var t1 = Texture.fromImage("img/horizon-bg1.jpg");
-		var t2 = Texture.fromImage("img/horizon-bg2.jpg");
-		var t3 = Texture.fromImage("img/horizon-bg3.jpg");
-		var t4 = Texture.fromImage("img/horizon-bg4.jpg");
-		
-		textures = [t1,t2,t3,t4];
-		
-		var bg = new Sprite(t1);
-		bg.interactive = true;
-		stage.addChild(bg);
-		
-		shader = new HorizonStripShader(t1, t2);
+		shader = new HorizonStripShader(textures[0], textures[1]);
 		shader.setStrips(currentStrips);
 		
 		var blur = new BlurFilter();
 		blur.blur = .5;
 		
-		bg.filters = [shader, blur];
+		display.filters = [shader, blur];
 		
 		flock = new FlockSprites(inputs);
 		stage.addChild(flock);
@@ -140,7 +116,19 @@ class Main extends Application {
 		debugGraphics = new Graphics();
 		stage.addChild(debugGraphics);
 		#end
+		
+		ready = true; 
 	}
+	
+	
+	function setupPixi() {
+		container = Browser.document.getElementById('pixi-container');
+		antialias = false;
+		backgroundColor =0;
+		start(Application.WEBGL, container);
+		renderer.resize(1280, 720);
+	}
+	
 	
 	
 	override function onWindowResize(event:Event) {
@@ -174,13 +162,13 @@ class Main extends Application {
 		
 		SimpleActuator.stage_onEnterFrame();
 		
-		inputs.update(elapsed);
+		if (!ready) return;
 		
+		inputs.update(elapsed);
 		var newFlockData = flock.update(seconds, dt);
 		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
 		
 		updateShaderParameters(seconds, dt);
-		
 		updateSlices(dt);
 	}
 	

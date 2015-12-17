@@ -16,6 +16,7 @@ class SeascapeAudio {
 	public static var regions(default, never):Array<AudioRegion> = SeascapeRegions.parse('res/seascape_regions.csv');
 	
 	public var isReady(default, null):Bool;
+	public var isDecoding(default, null):Bool;
 	public var ready(default, null):Signal<Void->Void>;
 	public var error(default, null):Signal<String->Void>;
 	public var loadProgress(default, null):Signal<Float->Void>;
@@ -33,9 +34,7 @@ class SeascapeAudio {
 		context = AudioBase.createContext();
 		samples = new Samples(context);
 		
-		samples.itemBegin.connect(onItemBegin);
 		samples.itemRelease.connect(onItemRelease);
-		samples.itemEnd.connect(onItemEnd);
 		activeRegions = new Map<Int,Int>();
 		
 		ready = new Signal<Void->Void>();
@@ -55,61 +54,37 @@ class SeascapeAudio {
 			error.emit('Browser does not supoprt ogg or mp3 audio playback :\\');
 			return;
 		}
-
-		// region start points tend to be a little bit off after encoding - account for that here.
-		// note: if using lossless (.wav) then no offset should be needed. 
-		//if (audioType == 'ogg') {
-			//regionOffset = 0;
-		//} else {
-			//regionOffset = 0;
-		//}
-			
+		
 		var audioURL = 'audio/seascape.$audioType';
 		
 		#if debug
 		trace('SeascapeAudio - audioType:$audioType, audioURL:$audioURL', regions);
 		#end
 		
-		Samples.loadArrayBuffer(audioURL, onArrayBufferLoaded, onLoadProgress, onError);
+		Samples.loadArrayBuffer(audioURL, onArrayBufferLoaded, loadProgress.emit, onError);
 	}
 	
 	
 	public function decodeBuffer() {
+		isDecoding = true;
 		// decode blocks execution, so do this when it won't be noticed.
 		Samples.decodeArrayBuffer(arrayBuffer, context, onDecoded, onError);
 	}
 	
-	
-	function onItemBegin(id:Int, time:Float) {
-		//trace('onItemBegin $id');
-		
-	}
-	
-	function onItemRelease(id:Int, time:Float) {
-		//trace('onItemRelease $id');
-		
-		// pick a new region to play
-		var lastItem = samples.activeItems.get(id);
-		var lastRegion = regions[activeRegions.get(id)];
-		activeRegions.remove(id);
+	public function start() {
 		
 		var i = Std.int(Math.random() * regions.length);
 		var region = regions[i];
 		
 		var maxTime = (region.duration / 2);
-		var attack = Math.min(lastItem.release, maxTime);
-		var release = maxTime * .25 + Math.random() * maxTime * .25;
+		var attack = maxTime * (1/3) + Math.random() * maxTime * (1/3);
+		var release = maxTime * (1/3) + Math.random() * maxTime * (1/3);
 		
-		playRegion(i, 0.15 + Math.random()*.05, attack, release, time - context.currentTime);
-	}
-	
-	function onItemEnd(id:Int) {
-		//trace('onItemEnd $id');
-		//trace(samples.polyphony);
+		playRegion(i, 0.15 + Math.random() * .05, attack, release, 0);
 	}
 	
 	
-	public function playRegion(index:Int, volume:Float, attack:Float, release:Float, delayBy:Float):Int {
+	function playRegion(index:Int, volume:Float, attack:Float, release:Float, delayBy:Float):Int {
 		
 		var region = regions[index];
 		
@@ -130,8 +105,21 @@ class SeascapeAudio {
 	}
 	
 	
-	function onLoadProgress(value:Float) {
-		loadProgress.emit(value);
+	function onItemRelease(id:Int, time:Float) {
+		
+		// pick a new region to play
+		var lastItem = samples.activeItems.get(id);
+		var lastRegion = regions[activeRegions.get(id)];
+		activeRegions.remove(id);
+		
+		var i = Std.int(Math.random() * regions.length);
+		var region = regions[i];
+		
+		var maxTime = (region.duration / 2);
+		var attack = Math.min(lastItem.release, maxTime);
+		var release = maxTime * (1/3) + Math.random() * maxTime * (1/3);
+		
+		playRegion(i, 0.15 + Math.random() * .05, attack, release, time - context.currentTime);
 	}
 	
 	
@@ -142,6 +130,7 @@ class SeascapeAudio {
 	
 	
 	function onDecoded(buffer:AudioBuffer) {
+		isDecoding = false;
 		samples.buffer = buffer;
 		arrayBuffer = null;
 		isReady = true;

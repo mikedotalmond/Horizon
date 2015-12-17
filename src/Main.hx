@@ -105,7 +105,8 @@ class Main extends Application {
 		audio.ready.connect(function() {
 			trace('ready');
 			
-			audio.playRegion(Std.int(Math.random() * SeascapeAudio.regions.length), 0.25, 1, 1, 1);
+			audio.playRegion(0, 0.25, .5, 5, 1);
+			//audio.playRegion(Std.int(Math.random() * SeascapeAudio.regions.length), 0.25, 0, 0, 1);
 		});
 		
 		audio.loadBuffer();

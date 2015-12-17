@@ -23,7 +23,6 @@ class SeascapeAudio {
 	
 	var context:AudioContext;
 	var arrayBuffer:ArrayBuffer;
-	var audioBuffer:AudioBuffer;
 	var samples:Samples;
 	var activeRegions:Map<Int, Int>;
 	
@@ -75,6 +74,7 @@ class SeascapeAudio {
 	
 	
 	public function decodeBuffer() {
+		trace('decodeBuffer');
 		// decode blocks execution, so do this when it won't be noticed.
 		Samples.decodeArrayBuffer(arrayBuffer, context, onDecoded, onError);
 	}
@@ -83,28 +83,28 @@ class SeascapeAudio {
 	function onItemBegin(id:Int, time:Float) {
 		trace('onItemBegin $id');
 		
-		var item = samples.activeItems.get(id);
-		var region = regions[activeRegions.get(id)];
-		
-		var rTime = region.duration - item.release;
-		if (rTime < samples.sampleTime) rTime = samples.sampleTime;
-		
-		samples.doRelease(id, time + rTime);
 	}
 	
 	function onItemRelease(id:Int, time:Float) {
 		trace('onItemRelease $id');
-		// pick a new region to play
-		var item = samples.activeItems.get(id);
-		var region = regions[activeRegions.get(id)];
 		
-		var maxRelease = region.duration - item.release;
-		var release = maxRelease * .5 + maxRelease * Math.random();
-		playRegion(Std.int(Math.random() * regions.length), 0.25, item.release/1.5, release, time-context.currentTime);
+		// pick a new region to play
+		var lastItem = samples.activeItems.get(id);
+		var lastRegion = regions[activeRegions.get(id)];
+		activeRegions.remove(id);
+		
+		var i = Std.int(Math.random() * regions.length);
+		var region = regions[i];
+		
+		var maxTime = (region.duration / 2);
+		var attack = Math.min(lastItem.release, maxTime);
+		var release = maxTime * .25 + Math.random() * maxTime * .25;
+		
+		playRegion(i, 0.1 + Math.random()*.1, attack, release, time - context.currentTime);
 	}
 	
 	function onItemEnd(id:Int) {
-		activeRegions.remove(id);
+		//activeRegions.remove(id);
 		trace('onItemEnd $id');
 		trace(samples.polyphony);
 	}
@@ -114,14 +114,15 @@ class SeascapeAudio {
 		
 		var region = regions[index];
 		
+		trace('playRegion:$index (${region.start},${region.duration}), volume:$volume, attack:$attack, release:$release, delay:$delayBy');
+		
 		samples.volume = volume;
 		samples.attack = attack;
 		samples.release = release;
 		samples.offset = region.start;
 		samples.duration = region.duration;
 		
-		var id = samples.playSample(null, delayBy, false);
-		
+		var id = samples.playSample(null, delayBy);
 		activeRegions.set(id, index);
 		
 		return id;
@@ -135,15 +136,20 @@ class SeascapeAudio {
 	
 	
 	function onArrayBufferLoaded(buffer:ArrayBuffer) {
+		trace('onArrayBufferLoaded');
 		arrayBuffer = buffer;
 		bufferLoaded.emit();
 	}
 	
 	
 	function onDecoded(buffer:AudioBuffer) {
-		audioBuffer = buffer;
 		samples.buffer = buffer;
+		arrayBuffer = null;
 		isReady = true;
+		
+		trace('onDecoded');
+		trace(buffer);
+		
 		ready.emit();
 	}
 	

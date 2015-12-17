@@ -103,9 +103,6 @@ import util.MathUtil;
 			last = b;
 		}
 		
-		// Add (X_DATA_POINTS + Y_DATA_POINTS) extra fields to the end for some flock data bits...
-		dataOffset 	= data.length; // 0...dataOffset is the boid data, dataOffset...data.length is extra data
-		data = data.concat([for(i in 0...(FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS)) .0]);
 		//
 		drawList = new Float32Array(data);
 	}
@@ -127,14 +124,9 @@ import util.MathUtil;
 		}
 		
 		var b = boids;
-		var offset = dataOffset;
 		
 		var absV = .0;
 		var bX, bY, bXi, bYi, tmpA, tmpB;
-		var end = FlockData.X_DATA_POINTS + FlockData.Y_DATA_POINTS;
-		
-		// reset x/y data
-		for (j in offset...end) d[j] = .0;
 		
 		while (b != null) {
 			// partitioning
@@ -142,14 +134,6 @@ import util.MathUtil;
 			bXi = Std.int(bX / CellSize);
 			bYi = Std.int((bY + GridYOffset) / CellSize);
 			c[bXi + bYi * CellCountX].push(b);
-			
-			// flock stats
-			absV = MathUtil.abs(b.vy);
-			d[offset + Std.int((bX / WIDTH) * FlockData.X_DATA_POINTS)] += absV;
-			
-			absV = MathUtil.abs(b.vx);
-			d[offset + Std.int((bY / HEIGHT) * FlockData.Y_DATA_POINTS) + FlockData.X_DATA_POINTS] += absV;
-			
 			b = b.next;
 		}
 		

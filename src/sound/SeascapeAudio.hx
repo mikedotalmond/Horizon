@@ -32,6 +32,7 @@ class SeascapeAudio {
 		
 		context = AudioBase.createContext();
 		samples = new Samples(context);
+		
 		samples.itemBegin.connect(onItemBegin);
 		samples.itemRelease.connect(onItemRelease);
 		samples.itemEnd.connect(onItemEnd);
@@ -74,19 +75,18 @@ class SeascapeAudio {
 	
 	
 	public function decodeBuffer() {
-		trace('decodeBuffer');
 		// decode blocks execution, so do this when it won't be noticed.
 		Samples.decodeArrayBuffer(arrayBuffer, context, onDecoded, onError);
 	}
 	
 	
 	function onItemBegin(id:Int, time:Float) {
-		trace('onItemBegin $id');
+		//trace('onItemBegin $id');
 		
 	}
 	
 	function onItemRelease(id:Int, time:Float) {
-		trace('onItemRelease $id');
+		//trace('onItemRelease $id');
 		
 		// pick a new region to play
 		var lastItem = samples.activeItems.get(id);
@@ -100,13 +100,12 @@ class SeascapeAudio {
 		var attack = Math.min(lastItem.release, maxTime);
 		var release = maxTime * .25 + Math.random() * maxTime * .25;
 		
-		playRegion(i, 0.1 + Math.random()*.1, attack, release, time - context.currentTime);
+		playRegion(i, 0.15 + Math.random()*.05, attack, release, time - context.currentTime);
 	}
 	
 	function onItemEnd(id:Int) {
-		//activeRegions.remove(id);
-		trace('onItemEnd $id');
-		trace(samples.polyphony);
+		//trace('onItemEnd $id');
+		//trace(samples.polyphony);
 	}
 	
 	
@@ -114,7 +113,9 @@ class SeascapeAudio {
 		
 		var region = regions[index];
 		
+		#if debug
 		trace('playRegion:$index (${region.start},${region.duration}), volume:$volume, attack:$attack, release:$release, delay:$delayBy');
+		#end
 		
 		samples.volume = volume;
 		samples.attack = attack;
@@ -129,14 +130,12 @@ class SeascapeAudio {
 	}
 	
 	
-	
 	function onLoadProgress(value:Float) {
 		loadProgress.emit(value);
 	}
 	
 	
 	function onArrayBufferLoaded(buffer:ArrayBuffer) {
-		trace('onArrayBufferLoaded');
 		arrayBuffer = buffer;
 		bufferLoaded.emit();
 	}
@@ -146,10 +145,6 @@ class SeascapeAudio {
 		samples.buffer = buffer;
 		arrayBuffer = null;
 		isReady = true;
-		
-		trace('onDecoded');
-		trace(buffer);
-		
 		ready.emit();
 	}
 	

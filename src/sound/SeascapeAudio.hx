@@ -24,12 +24,12 @@ class SeascapeAudio {
 	public var bufferLoaded(default, null):Signal<Void->Void>;
 	
 	public var outGain(default,null):GainNode;
+	public var muted(default,null):Bool=false;
 	
 	var context:AudioContext;
 	var arrayBuffer:ArrayBuffer;
 	var samples:Samples;
 	var activeRegions:Map<Int, Int>;
-	var muted:Bool=false;
 	
 	public function new() {
 		

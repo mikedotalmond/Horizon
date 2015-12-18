@@ -56,7 +56,7 @@ class FieldPoint {
 		
 		var w2 = Width / 2;
 		var h2 = Height / 2;
-		var w25 = Width * 1.25;
+		var w25 = Width * 2;
 		var h5 = Height * .75;
 		
 		var x,y;
@@ -64,14 +64,14 @@ class FieldPoint {
 		function newY() y = h2 + fRndOffset() * h5;
 		
 		var dx = .0;
-		while (dx < 256 || dx > 512) {
+		while (dx < 256 || dx > w2) {
 			newX();
 			dx = pt.x - x;
 			dx = MathUtil.abs(dx);
 		}
 		
 		var dy = .0;
-		while (dy < 64 || dy > 200) {
+		while (dy < 64 || dy > h2) {
 			newY();
 			dy = pt.y - y;
 			dy = MathUtil.abs(dy);

@@ -7,6 +7,7 @@ import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
 import js.html.KeyboardEvent;
+import js.html.VisibilityState;
 import motion.Actuate;
 import motion.actuators.SimpleActuator;
 import motion.easing.Quad;
@@ -58,6 +59,8 @@ class Main extends Application {
 	var audio:SeascapeAudio;
 	
 	var ready:Bool;
+	var paused:Bool;
+	var mutedBeforePause:Bool;
 	var loader:AssetLoader;
 	
 	public function new() {
@@ -88,6 +91,22 @@ class Main extends Application {
 		
 		fullscreenEnabled = (Screenfull != null && Screenfull.enabled);
 		if (fullscreenEnabled) Browser.document.addEventListener(Screenfull.raw.fullscreenchange, onWindowResize.bind(null));
+		
+		// pause and mute audio when tab looses focus - revert when active
+		Browser.document.addEventListener('visibilitychange', onVisibilityChange);
+	}
+	
+	
+	function onVisibilityChange(_) {
+		if (Browser.document.visibilityState == VisibilityState.HIDDEN) {
+			mutedBeforePause = audio.muted;
+			if (!mutedBeforePause) audio.toggleMute();
+			paused = true;
+		} else {
+			paused = false;
+			if (audio.muted && !mutedBeforePause) audio.toggleMute();
+			
+		}
 	}
 	
 	
@@ -172,6 +191,8 @@ class Main extends Application {
 		seconds = elapsed / 1000;
 		var dt = (seconds - lastTime);
 		lastTime = seconds;
+		
+		if (ready && paused) return;
 		
 		SimpleActuator.stage_onEnterFrame();
 		

@@ -23,11 +23,11 @@ import util.MathUtil;
 	public static inline var WIDTH:Float = 1280;
 	public static inline var HEIGHT:Float = 500;
 	
-	public static inline var TURN_SPEED:Float = .025;
+	public static inline var TURN_SPEED:Float = .01;
 	public static inline var GridYOffset = 64;
 	
-	public static inline var MIN_DIST:Float = 2.5 * 2.5;
-	public static inline var MAX_DIST:Float = 16 * 16;
+	public static inline var MIN_DIST:Float = 1*1;
+	public static inline var MAX_DIST:Float = 32 * 32;
 	public static inline var MAX_DX:Float = 16;
 	
 	
@@ -148,7 +148,7 @@ import util.MathUtil;
 			bx = b.x; by = b.y;
 			
 			// limit boid 'thinking' for more.. unpredictable movement. think more near water.
-			if (b.y < 400 && Math.random() > .85) {
+			if (b.y < 400 && Math.random() > .95) {
 				b.step();
 			} else {
 				bXi = Std.int(bx / CellSize);
@@ -268,7 +268,7 @@ import util.MathUtil;
 			if (strength != 0) {
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);
-				f = (1.0 / (hx * hx + hy * hy));
+				f =  1 / (hx * hx + hy * hy);
 				f *= f;
 				f *= strength;
 				vxHeading += hx * f;
@@ -325,9 +325,9 @@ import util.MathUtil;
 		angleDifference = angleDifference < 0 ? -angleDifference : angleDifference;
 		
 		if (crossProduct > 0) {
-			angle += angleDifference * turnSpeed * (.8 + Math.random() * .2); 
+			angle += angleDifference * turnSpeed * (.9 + Math.random() * .1); 
 		} else {
-			angle -= angleDifference * turnSpeed * (.8 + Math.random() * .2);
+			angle -= angleDifference * turnSpeed * (.9 + Math.random() * .1);
 		}
 		
 		vy = Math.sin(angle);

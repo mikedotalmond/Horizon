@@ -60,16 +60,20 @@ class FlockSprites extends ParticleContainer {
 		// radial point forces...
 		var fx:Array<Float> = [
 			/* x, y, force */
-			-10, -10, .000002,
-			-10, -10, .000002,
-			-10, -10, .000002,
+			-10, -10, .00000001,
+			-10, -10, .00000001,
+			-10, -10, .00000001,
+			-10, -10, .00000001,
+			-10, -10, .00000001,
 			640, 220, 0, /* mouse controlled */
 		];
 		
 		forces = [
-			new RndPoint(4.6, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(4.4, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(4.2, .00000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(2.4, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(2.2, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(2, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(1.8, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(1.6, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
 		];
 		
 		pointForces = new Float32Array(fx);

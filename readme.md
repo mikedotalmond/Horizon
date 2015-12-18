@@ -9,17 +9,4 @@ However it runs quite nicely as a native Android app or Windows exe if you feel 
 
 Try it in your browser, [here](http://horizon.mikedotalmond.co.uk).
 
-##Huh?##
-
-Written in [Haxe](http://haxe.org), built with [OpenFL](http://openfl.org)
-
-Uses 
-[openfl](http://lib.haxe.org/p/openfl),
-[lime](http://lib.haxe.org/p/lime),
-[actuate](http://lib.haxe.org/p/actuate),
-[golems](http://lib.haxe.org/p/golems),
-[hxsignal](http://lib.haxe.org/p/hxsignal),
-[screenfull.js](http://sindresorhus.com/screenfull.js/).
-
-
 [@mikedotalmond](https://twitter.com/mikedotalmond)

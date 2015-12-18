@@ -44,6 +44,7 @@ class Main extends Application {
 	var currentStrips:Float32Array;
 	
 	var inputs:Inputs;
+	var fullscreenEnabled:Bool;
 	
 	var newSliceTimer:Float = 0;
 	var flock:FlockSprites;
@@ -83,14 +84,26 @@ class Main extends Application {
 		onUpdate = update;
 		onWindowResize(null);
 		
-		if (Screenfull != null && Screenfull.enabled) {
-			inputs.keyDown.connect(function(code:Int) {
-				if (code == KeyboardEvent.DOM_VK_ESCAPE) Screenfull.exit();
-				else if(code == KeyboardEvent.DOM_VK_F) Screenfull.toggle(container);
-			});
-			Browser.document.addEventListener(Screenfull.raw.fullscreenchange, onWindowResize.bind(null));
+		inputs.keyDown.connect(onKeyDown);
+		
+		fullscreenEnabled = (Screenfull != null && Screenfull.enabled);
+		if (fullscreenEnabled) Browser.document.addEventListener(Screenfull.raw.fullscreenchange, onWindowResize.bind(null));
+	}
+	
+	
+	function onKeyDown(code:Int) {
+		switch(code) {
+			case KeyboardEvent.DOM_VK_ESCAPE: 
+				if (fullscreenEnabled) Screenfull.exit();
+				
+			case KeyboardEvent.DOM_VK_F: 
+				if (fullscreenEnabled) Screenfull.toggle(container);
+				
+			case KeyboardEvent.DOM_VK_M:
+				audio.toggleMute();
 		}
 	}
+	
 	
 	function onAssetsReady() {
 		audio.start();

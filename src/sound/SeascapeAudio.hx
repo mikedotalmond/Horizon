@@ -8,6 +8,7 @@ import js.html.audio.AudioBuffer;
 import js.html.audio.AudioBufferSourceNode;
 import js.html.audio.AudioContext;
 import js.html.audio.AudioNode;
+import js.html.audio.GainNode;
 import tones.AudioBase;
 import tones.Samples;
 
@@ -22,17 +23,25 @@ class SeascapeAudio {
 	public var loadProgress(default, null):Signal<Float->Void>;
 	public var bufferLoaded(default, null):Signal<Void->Void>;
 	
+	public var outGain(default,null):GainNode;
+	
 	var context:AudioContext;
 	var arrayBuffer:ArrayBuffer;
 	var samples:Samples;
 	var activeRegions:Map<Int, Int>;
+	var muted:Bool=false;
 	
 	public function new() {
 		
 		isReady = false;
 		
 		context = AudioBase.createContext();
-		samples = new Samples(context);
+		
+		outGain = context.createGain();
+		outGain.gain.setValueAtTime(.5, context.currentTime);
+		outGain.connect(context.destination);
+		
+		samples = new Samples(context, outGain);
 		
 		samples.itemRelease.connect(onItemRelease);
 		activeRegions = new Map<Int,Int>();
@@ -83,6 +92,13 @@ class SeascapeAudio {
 		playRegion(i, 0.15 + Math.random() * .05, attack, release, 0);
 	}
 	
+	public function toggleMute() {
+		muted = !muted;
+		outGain.gain.cancelScheduledValues(context.currentTime);
+		outGain.gain.setValueAtTime(muted ? 1 / 3 : 0, context.currentTime);
+		outGain.gain.linearRampToValueAtTime(muted ? 0 : 1 / 3, context.currentTime + .25);
+	}
+	
 	
 	function playRegion(index:Int, volume:Float, attack:Float, release:Float, delayBy:Float):Int {
 		
@@ -107,7 +123,7 @@ class SeascapeAudio {
 	
 	function onItemRelease(id:Int, time:Float) {
 		
-		// pick a new region to play
+		// pick a new region to play as the last one fades out
 		var lastItem = samples.activeItems.get(id);
 		var lastRegion = regions[activeRegions.get(id)];
 		activeRegions.remove(id);

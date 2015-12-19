@@ -199,8 +199,7 @@ class Main extends Application {
 		if (!ready) return;
 		
 		inputs.update(elapsed);
-		var newFlockData = flock.update(seconds, dt);
-		//if (newFlockData) soundControl.update(dt, flock.drawList, FlockSprites.DataSize);
+		flock.update(seconds, dt);
 		
 		updateShaderParameters(seconds, dt);
 		updateSlices(dt);
@@ -212,7 +211,7 @@ class Main extends Application {
 		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
 	}
 	
-	
+	var fadeRate:Float = 8;
 	inline function updateShaderParameters(t:Float, dt:Float) {
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
@@ -222,16 +221,21 @@ class Main extends Application {
 		var c = .005 * Math.sin(.5 + t / 10);
 		shader.setYOffsetData(c, .5 + b*.2, a);
 		
-		fadePhase += (dt / 60);
+		fadePhase += (dt / fadeRate);
 		if (fadePhase >= 1) {
+			
+			var minFadeRate = 10;
+			var maxFadeRate = 60;
+			fadeRate = minFadeRate +  Math.random() * (maxFadeRate-minFadeRate);
 			
 			fadePhase = 0;
 			shader.fadePosition = 0;
 			
 			var lastIndex = bgTextureIndex;
-			
-			bgTextureIndex++;
-			if (bgTextureIndex == textures.length) bgTextureIndex = 0;
+			// pick new random index - not the same as last one
+			while (bgTextureIndex == lastIndex) {
+				bgTextureIndex = (bgTextureIndex + Std.int(Math.random()*textures.length)) % textures.length;
+			}
 			
 			shader.textureA = textures[lastIndex];
 			shader.textureB = textures[bgTextureIndex];

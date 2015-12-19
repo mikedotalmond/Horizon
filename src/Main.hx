@@ -224,7 +224,7 @@ class Main extends Application {
 		fadePhase += (dt / fadeRate);
 		if (fadePhase >= 1) {
 			
-			var minFadeRate = 10;
+			var minFadeRate = 20;
 			var maxFadeRate = 60;
 			fadeRate = minFadeRate +  Math.random() * (maxFadeRate-minFadeRate);
 			

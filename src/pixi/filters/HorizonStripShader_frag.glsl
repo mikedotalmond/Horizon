@@ -77,7 +77,7 @@ void main(void) {
   vec4 mix = (1.0-position) * mixA + position * mixB;
   
   // add noise (monochromatic)
-  mix += (rX - 0.5) * .06; // noiseAmt
+  mix += (rX - 0.5) * .04; // noiseAmt
   
   // output
   gl_FragColor = mix;

@@ -23,8 +23,8 @@ import util.MathUtil;
 class FieldPoint {
 	
 	static inline var Width = 1280;
-	static inline var Height = 480;
-	static inline var rMax = 2147483647;
+	static inline var Height = 420;
+	static inline var rMax = 0x7fffffff;
 	
 	var next:Pt;
 	var last:Pt;
@@ -47,39 +47,9 @@ class FieldPoint {
 	}
 	
 	function rndPoint(pt:Pt) {
-		pt.x = rnd() % Width;
+		pt.x = (rnd() % (Width << 1)) - (Width >> 1);
 		pt.y = rnd() % Height;
 		pt.f = (rnd() / rMax);
-	}
-	
-	function rndPointOffset(pt:Pt) {
-		
-		var w2 = Width / 2;
-		var h2 = Height / 2;
-		var w25 = Width * 2;
-		var h5 = Height * .75;
-		
-		var x,y;
-		function newX() x = w2 + fRndOffset() * w25;
-		function newY() y = h2 + fRndOffset() * h5;
-		
-		var dx = .0;
-		while (dx < 256 || dx > w2) {
-			newX();
-			dx = pt.x - x;
-			dx = MathUtil.abs(dx);
-		}
-		
-		var dy = .0;
-		while (dy < 64 || dy > h2) {
-			newY();
-			dy = pt.y - y;
-			dy = MathUtil.abs(dy);
-		}
-		
-		pt.x = x;
-		pt.y = y;
-		pt.f = fRnd();
 	}
 	
 	function step(now, dt) { }
@@ -145,7 +115,7 @@ class RndPoint extends EasedPoint {
 	}
 	
 	override function getNextPoint() {
-		rndPointOffset(next);
+		rndPoint(next);
 		next.f *= maxForce;
 	}
 }

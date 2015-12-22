@@ -7,13 +7,13 @@ import motion.easing.*;
 import pixi.core.particles.ParticleContainer;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
-import util.Inputs;
 import worker.FlockData;
 
 import net.rezmason.utils.workers.Golem;
 import net.rezmason.utils.workers.QuickBoss;
 
 import util.MathUtil;
+import util.Inputs;
 
 import worker.Data;
 import worker.FlockData.FlockBoss;
@@ -22,7 +22,7 @@ import worker.FlockData.FlockUpdateData;
 
 class FlockSprites extends ParticleContainer {
 	
-	static public inline var BoidCount:Int = 620;
+	static public inline var BoidCount:Int = 640;
 	static public inline var SpriteCount:Int = BoidCount << 1; // x2 for th 'reflection' clones
 	static public inline var DataSize:Int = SpriteCount * FlockData.FIELD_COUNT;
 	
@@ -60,20 +60,13 @@ class FlockSprites extends ParticleContainer {
 		// radial point forces...
 		var fx:Array<Float> = [
 			/* x, y, force */
-			-10, -10, .00000001,
-			-10, -10, .00000001,
-			-10, -10, .00000001,
-			-10, -10, .00000001,
-			-10, -10, .00000001,
-			640, 220, 0, /* mouse controlled */
+			-10, -10, .1,
+			-10, -10, .1,
 		];
 		
 		forces = [
-			new RndPoint(2.4, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(2.2, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(2, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(1.8, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
-			new RndPoint(1.6, .000000001, Linear.easeNone, Std.int(Math.random() * 0xffffff)),
+			new RndPoint(6, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
+			new RndPoint(4, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
 		];
 		
 		pointForces = new Float32Array(fx);
@@ -101,7 +94,6 @@ class FlockSprites extends ParticleContainer {
 		while (i < DataSize) {
 			
 			child = getChildAt(j);
-			
 			child.x = drawList[i + FlockData.DATA_X];
 			child.y = drawList[i + FlockData.DATA_Y];
 			child.scale.set(drawList[i + FlockData.DATA_SCALE]);
@@ -121,18 +113,6 @@ class FlockSprites extends ParticleContainer {
 			pointForces[j + 0] = pt.x;
 			pointForces[j + 1] = pt.y;
 			pointForces[j + 2] = pt.f;
-		}
-		
-		//
-		var mIndx = (forces.length * 3);
-		var v = inputs.mouseVelocity;
-		var f = pointForces[mIndx + 2];
-		if (v > 0 && inputs.mouseIsDown) {
-			pointForces[mIndx] = inputs.mouseX;
-			pointForces[mIndx + 1] = inputs.mouseY;
-			pointForces[mIndx + 2] = f + (v - f) * 5e-12;
-		} else {
-			pointForces[mIndx + 2] = f > 5e-12 ? f * .8 : 0;
 		}
 		
 		// send the update request

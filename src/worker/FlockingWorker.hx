@@ -73,9 +73,9 @@ import util.MathUtil;
 		for (i in 0...count) {
 			
 			size = 1.5 + Math.random(); 
-			scale = .7 + Math.random() * .2;
-			speed = .75 + Math.random() * .4;
-			turnSpeed = TURN_SPEED + TURN_SPEED * (Math.random()) * 1.5;
+			scale = .5 + Math.random() * .25;
+			speed = (2/3) + Math.random() * (1/3);
+			turnSpeed = TURN_SPEED + TURN_SPEED * Math.random() * (2/3);
 			
 			b = new Boid(i, size, scale, speed, turnSpeed);
 			
@@ -87,7 +87,7 @@ import util.MathUtil;
 			index = i * FlockData.FIELD_COUNT;
 			data[index + FlockData.DATA_X] = b.x;
 			data[index + FlockData.DATA_Y] = b.y;
-			data[index + FlockData.DATA_SCALE] = b.drawScale = (b.scale * size / 4.8);
+			data[index + FlockData.DATA_SCALE] = b.drawScale = (b.scale * size / 5);
 			data[index + FlockData.DATA_ALPHA] = b.alpha;
 			
 			index += cloneOffset;
@@ -268,9 +268,9 @@ import util.MathUtil;
 			if (strength != 0) {
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);
-				f =  1 / (hx * hx + hy * hy);
-				f *= f;
-				f *= strength;
+				f = 1 - ((hx * hx + hy * hy) / 6553600);
+				f *= strength
+				f /= sizeSq;
 				vxHeading += hx * f;
 				vyHeading += hy * f;
 			}
@@ -325,9 +325,9 @@ import util.MathUtil;
 		angleDifference = angleDifference < 0 ? -angleDifference : angleDifference;
 		
 		if (crossProduct > 0) {
-			angle += angleDifference * turnSpeed * (.9 + Math.random() * .1); 
+			angle += angleDifference * turnSpeed;// * (.9 + Math.random() * .1); 
 		} else {
-			angle -= angleDifference * turnSpeed * (.9 + Math.random() * .1);
+			angle -= angleDifference * turnSpeed;// * (.9 + Math.random() * .1);
 		}
 		
 		vy = Math.sin(angle);

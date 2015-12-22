@@ -60,8 +60,8 @@ class AssetLoader {
 	}
 	
 	function loadTextures() {
-		
-		var assets = ['img/horizon-bg1.jpg', 'img/horizon-bg2.jpg', 'img/horizon-bg3.jpg', 'img/horizon-bg4.jpg'];
+		var path = 'img/bg';
+		var assets = ['$path/horizon-bg1.jpg', '$path/horizon-bg2.jpg','$path/horizon-bg3.jpg','$path/horizon-bg4.jpg'];
 		
 		var loader = new Loader();
 		loader.add(assets);
@@ -70,7 +70,6 @@ class AssetLoader {
 			textures = [for (name in assets) Texture.fromImage(name)];		
 			checkState();
 		});
-		
 		loader.load();
 	}
 	

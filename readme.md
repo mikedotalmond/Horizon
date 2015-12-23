@@ -1,5 +1,5 @@
-#[Horizon](https://mikedotalmond.github.io/Horizon)#
+#[Horizon](http://mikedotalmond.co.uk/horizon/)#
 
-*A distant flock drifts over a slowly evolving seascape, accompanied by an abstract soundscape.*
+[About the project](http://mikedotalmond.co.uk/projects/horizon)
 
 [@mikedotalmond](https://twitter.com/mikedotalmond)

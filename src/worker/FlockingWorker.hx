@@ -73,7 +73,7 @@ import util.MathUtil;
 		for (i in 0...count) {
 			
 			size = 1.5 + Math.random(); 
-			scale = .5 + Math.random() * .25;
+			scale = (2/3) + Math.random() * .25;
 			speed = (2/3) + Math.random() * (1/3);
 			turnSpeed = TURN_SPEED + TURN_SPEED * Math.random() * (2/3);
 			
@@ -269,7 +269,7 @@ import util.MathUtil;
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);
 				f = 1 - ((hx * hx + hy * hy) / 6553600);
-				f *= strength
+				f *= strength;
 				f /= sizeSq;
 				vxHeading += hx * f;
 				vyHeading += hy * f;

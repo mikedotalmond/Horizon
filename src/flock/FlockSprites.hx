@@ -1,23 +1,21 @@
 package flock;
 
 import flock.FieldPoint.RndPoint;
-import hxsignal.Signal;
 import js.html.Float32Array;
 import motion.easing.*;
+import net.rezmason.utils.workers.Golem;
 import pixi.core.particles.ParticleContainer;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
-import worker.FlockData;
-
-import net.rezmason.utils.workers.Golem;
-import net.rezmason.utils.workers.QuickBoss;
-
-import util.MathUtil;
 import util.Inputs;
 
 import worker.Data;
+import worker.FlockData;
 import worker.FlockData.FlockBoss;
 import worker.FlockData.FlockUpdateData;
+
+
+
 
 
 class FlockSprites extends ParticleContainer {
@@ -34,7 +32,7 @@ class FlockSprites extends ParticleContainer {
 	var flockUpdateData	:FlockUpdateData;
 	
 	var drawDataCount	:Int;
-	var inputs			:util.Inputs;
+	var inputs			:Inputs;
 	
 	public var drawList(default,null):Float32Array;
 	

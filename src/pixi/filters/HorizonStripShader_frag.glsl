@@ -5,8 +5,6 @@ precision mediump int;
 precision highp float;
 #endif
 
-#define SLICE_COUNT 7.0;
-
 uniform sampler2D textureA;
 uniform sampler2D textureB;
 

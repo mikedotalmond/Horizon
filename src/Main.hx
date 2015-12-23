@@ -35,7 +35,7 @@ typedef TestThread = QuickBoss<Int, Int>;
 
 class Main extends Application {
 
-	static inline var NewSliceTime = 3; // seconds
+	static inline var NewSliceTime = 4; // seconds
 	static inline var SliceCount = 7; // vertical slice count (max of 7)
 	
 	//
@@ -207,7 +207,8 @@ class Main extends Application {
 	
 	
 	function pickNewStripTargets() {
-		var stripWidth = 1.0 / SliceCount;
+		var sliceCount = (4.5 + (Math.random() * Math.random()*2.5));
+		var stripWidth = 1.0 / sliceCount;
 		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
 	}
 	
@@ -256,7 +257,7 @@ class Main extends Application {
 		
 		// lerp slices toward targets...
 		var c;
-		var f = 0.0015; // speed
+		var f = 0.0003; // speed
 		for (i in 0...SliceCount) {
 			c = currentStrips[i];
 			currentStrips[i] = c + (targetStrips[i]-c) * f;    

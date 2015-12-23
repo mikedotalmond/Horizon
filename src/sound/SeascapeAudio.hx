@@ -1,19 +1,17 @@
 package sound;
 
-import haxe.xml.Check.Attrib;
 import hxsignal.Signal;
 import js.Error;
 import js.html.ArrayBuffer;
 import js.html.audio.AudioBuffer;
-import js.html.audio.AudioBufferSourceNode;
 import js.html.audio.AudioContext;
-import js.html.audio.AudioNode;
 import js.html.audio.GainNode;
 import tones.AudioBase;
 import tones.Samples;
 
 class SeascapeAudio {
 	
+	static inline var OUTPUT_LEVEL = .75;
 	public static var regions(default, never):Array<AudioRegion> = SeascapeRegions.parse('res/seascape_regions.csv');
 	
 	public var isReady(default, null):Bool;
@@ -31,6 +29,7 @@ class SeascapeAudio {
 	var samples:Samples;
 	var activeRegions:Map<Int, Int>;
 	
+	
 	public function new() {
 		
 		isReady = false;
@@ -38,7 +37,7 @@ class SeascapeAudio {
 		context = AudioBase.createContext();
 		
 		outGain = context.createGain();
-		outGain.gain.setValueAtTime(.5, context.currentTime);
+		outGain.gain.setValueAtTime(OUTPUT_LEVEL, context.currentTime);
 		outGain.connect(context.destination);
 		
 		samples = new Samples(context, outGain);
@@ -95,8 +94,8 @@ class SeascapeAudio {
 	public function toggleMute() {
 		muted = !muted;
 		outGain.gain.cancelScheduledValues(context.currentTime);
-		outGain.gain.setValueAtTime(muted ? 1 / 3 : 0, context.currentTime);
-		outGain.gain.linearRampToValueAtTime(muted ? 0 : 1 / 3, context.currentTime + .25);
+		outGain.gain.setValueAtTime(muted ? OUTPUT_LEVEL : 0, context.currentTime);
+		outGain.gain.linearRampToValueAtTime(muted ? 0 : OUTPUT_LEVEL, context.currentTime + .25);
 	}
 	
 	

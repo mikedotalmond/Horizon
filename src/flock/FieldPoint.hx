@@ -1,11 +1,8 @@
 package flock;
 
 import flock.FieldPoint.Pt;
-import motion.easing.Cubic;
-import motion.easing.Cubic.CubicEaseInOut;
 import motion.easing.IEasing;
 import motion.easing.Linear;
-import motion.easing.Quad;
 import util.MathUtil;
 
 /**
@@ -47,7 +44,6 @@ class FieldPoint {
 	}
 	
 	function rndPoint(pt:Pt) {
-		//pt.x = fRnd() * (Width * 3);
 		pt.x = (rnd() % (Width * 3)) - Width;
 		pt.y = (rnd() % Height) -32;
 		pt.f = (rnd() / rMax);

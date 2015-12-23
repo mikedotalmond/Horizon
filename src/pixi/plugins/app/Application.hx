@@ -21,7 +21,6 @@ import tones.utils.TimeUtil;
  *
  * @author Mike
  * Changes from the above:
- * Use performance api in place of Date.now() (where available)
  * Use TimeUtil.frameTick as a single point of access to requestanimationFrame
  * De-underscored the privates.
  */

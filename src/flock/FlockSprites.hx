@@ -1,6 +1,11 @@
 package flock;
 
 import flock.FieldPoint.RndPoint;
+import flock.worker.*;
+import flock.worker.types.*;
+import flock.worker.types.FlockControl;
+import flock.worker.types.FlockUpdateData;
+import flock.worker.types.WorkerDataType;
 import js.html.Float32Array;
 import motion.easing.*;
 import net.rezmason.utils.workers.Golem;
@@ -9,23 +14,15 @@ import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import util.Inputs;
 
-import worker.Data;
-import worker.FlockData;
-import worker.FlockData.FlockBoss;
-import worker.FlockData.FlockUpdateData;
-
-
-
-
 
 class FlockSprites extends ParticleContainer {
 	
 	static public inline var BoidCount:Int = 620;
 	static public inline var SpriteCount:Int = BoidCount << 1; // x2 for th 'reflection' clones
-	static public inline var DataSize:Int = SpriteCount * FlockData.FIELD_COUNT;
+	static public inline var DataSize:Int = SpriteCount * FlockDataFields.COUNT;
 	
 	var needData		:Bool = true;
-    var flocker			:FlockBoss = null;
+    var flocker			:FlockControl = null;
 	
 	var forces			:Array<FieldPoint>;
 	var pointForces		:Float32Array;
@@ -72,11 +69,11 @@ class FlockSprites extends ParticleContainer {
 		pointForces = new Float32Array(fx);
 		
 		// create this container now, send it with each update
-		flockUpdateData = { type:Data.TYPE_UPDATE, pointForces:pointForces };
+		flockUpdateData = { type:WorkerDataType.UPDATE, pointForces:pointForces };
 		
-		flocker = new FlockBoss(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
+		flocker = new FlockControl(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
-		flocker.send(cast { type:Data.TYPE_INIT, count:BoidCount } ); // init
+		flocker.send(cast { type:WorkerDataType.INIT, count:BoidCount } ); // init
 	}
 	
 	
@@ -94,12 +91,12 @@ class FlockSprites extends ParticleContainer {
 		while (i < DataSize) {
 			
 			child = getChildAt(j);
-			child.x = drawList[i + FlockData.DATA_X];
-			child.y = drawList[i + FlockData.DATA_Y];
-			child.scale.set(drawList[i + FlockData.DATA_SCALE]);
-			child.alpha = drawList[i + FlockData.DATA_ALPHA];
+			child.x = drawList[i + FlockDataFields.DATA_X];
+			child.y = drawList[i + FlockDataFields.DATA_Y];
+			child.scale.set(drawList[i + FlockDataFields.DATA_SCALE]);
+			child.alpha = drawList[i + FlockDataFields.DATA_ALPHA];
 			
-			i += FlockData.FIELD_COUNT;
+			i += FlockDataFields.COUNT;
 			j++;
 		}
 		

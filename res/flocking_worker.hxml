@@ -1,7 +1,14 @@
 ##GOLEM##
--main worker.FlockingWorker
+-main flock.worker.FlockingWorker
 -js flocker.js
 -lib golems
+
+## Minify and overwrite the generated js
+-lib closure
+-D closure_overwrite
+
+## Full dce and static analysis
 -dce full
 -D analyzer
+
 -cp ../src

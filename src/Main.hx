@@ -2,26 +2,27 @@ package;
 
 import flock.FlockSprites;
 import hxsignal.Signal.ConnectionTimes;
+
 import js.Browser;
 import js.html.Element;
 import js.html.Event;
 import js.html.Float32Array;
 import js.html.KeyboardEvent;
 import js.html.VisibilityState;
-import motion.Actuate;
-import motion.actuators.SimpleActuator;
-import motion.easing.Quad;
+
 import motion.easing.Sine;
-import net.rezmason.utils.workers.QuickBoss;
+import motion.actuators.SimpleActuator;
+
 import pixi.core.graphics.Graphics;
-import pixi.core.Pixi;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 import pixi.filters.blur.BlurFilter;
+
 import pixi.filters.HorizonStripShader;
-import pixi.loaders.Loader;
 import pixi.plugins.app.Application;
+
 import sound.SeascapeAudio;
+
 import util.Inputs;
 import util.Screenfull;
 
@@ -31,37 +32,39 @@ import util.Screenfull;
  * @author Mike Almond - https://github.com/mikedotalmond
  */
 
-typedef TestThread = QuickBoss<Int, Int>;
-
 class Main extends Application {
 
-	static inline var NewSliceTime = 4; // seconds
-	static inline var SliceCount = 7; // vertical slice count (max of 7)
+	static inline var NewSliceTime = 3; // seconds
+	static inline var SliceCount = 7; // max slice count
+	static inline var SliceTransitionSpeed = 0.0004;
+	
+	static inline var MinBgFadeRate = 20.0;
+	static inline var MaxBgFadeRate = 60.0;
 	
 	//
-	var lastTime:Float = 0;
 	var shader:HorizonStripShader;
 	var targetStrips:Float32Array;
 	var currentStrips:Float32Array;
 	
-	var inputs:Inputs;
-	var fullscreenEnabled:Bool;
-	
+	var lastTime:Float = 0;
 	var newSliceTimer:Float = 0;
-	var flock:FlockSprites;
-
-	var seconds:Float = 0;
+	
 	var container:Element;
 	var textures:Array<Texture>;	
 	var bgTextureIndex:Int = 1;
-	var fadePhase:Float = 0;
+	var bgFadePhase:Float = 0;
+	var bgFadeRate:Float = MinBgFadeRate;
 	
+	var inputs:Inputs;
+	var flock:FlockSprites;
 	var audio:SeascapeAudio;
+	var loader:AssetLoader;
 	
 	var ready:Bool;
 	var paused:Bool;
 	var mutedBeforePause:Bool;
-	var loader:AssetLoader;
+	var fullscreenEnabled:Bool;
+	
 	
 	public function new() {
 		ready = false;
@@ -70,7 +73,7 @@ class Main extends Application {
 		
 		setupPixi();
 		
-		SimpleActuator.getTime = function () return seconds;
+		SimpleActuator.getTime = function () return lastTime;
 		
 		inputs = new Inputs(stage);
 		inputs.hidePointerWhenIdle = true;
@@ -80,7 +83,6 @@ class Main extends Application {
 		pickNewStripTargets();
 		
 		audio = new SeascapeAudio();
-		
 		loader = new AssetLoader(stage, audio);
 		loader.complete.connect(onAssetsReady, ConnectionTimes.Once);
 		
@@ -166,8 +168,7 @@ class Main extends Application {
 	override function onWindowResize(event:Event) {
 		
 		var fullW = Browser.window.innerWidth;
-		var fullH = Browser.window.innerHeight;
-		
+		var fullH = Browser.window.innerHeight;		
 		var r1 = fullW / 1280;
 		var r2 = fullH / 720;
 		
@@ -188,7 +189,7 @@ class Main extends Application {
 	
 	function update(elapsed:Float) {
 		
-		seconds = elapsed / 1000;
+		var seconds = elapsed / 1000;
 		var dt = (seconds - lastTime);
 		lastTime = seconds;
 		
@@ -206,13 +207,6 @@ class Main extends Application {
 	}
 	
 	
-	function pickNewStripTargets() {
-		var sliceCount = (4.5 + (Math.random() * Math.random()*2.5));
-		var stripWidth = 1.0 / sliceCount;
-		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
-	}
-	
-	var fadeRate:Float = 8;
 	inline function updateShaderParameters(t:Float, dt:Float) {
 		
 		shader.reseed(Math.random() * 10000, Math.random() * 10000);
@@ -220,21 +214,19 @@ class Main extends Application {
 		var a = .5 * Math.sin(.5 + t / 10.5);
 		var b = Math.sin(t / 6.666 + Math.cos(t / 7.777));
 		var c = .005 * Math.sin(.5 + t / 10);
-		shader.setYOffsetData(c, .5 + b*.2, a);
+		shader.setYOffsetData(c, .5 + b * .2, a);
 		
-		fadePhase += (dt / fadeRate);
-		if (fadePhase >= 1) {
+		bgFadePhase += (dt / bgFadeRate);
+		if (bgFadePhase >= 1) {
 			
-			var minFadeRate = 20;
-			var maxFadeRate = 60;
-			fadeRate = minFadeRate +  Math.random() * (maxFadeRate-minFadeRate);
+			bgFadeRate = MinBgFadeRate + Math.random() * (MaxBgFadeRate-MinBgFadeRate);
 			
-			fadePhase = 0;
+			bgFadePhase = 0;
 			shader.fadePosition = 0;
 			
 			var lastIndex = bgTextureIndex;
-			// pick new random index - not the same as last one
 			while (bgTextureIndex == lastIndex) {
+				// pick new random index - not the same as last one
 				bgTextureIndex = (bgTextureIndex + Std.int(Math.random()*textures.length)) % textures.length;
 			}
 			
@@ -242,7 +234,7 @@ class Main extends Application {
 			shader.textureB = textures[bgTextureIndex];
 			
 		} else {
-			shader.fadePosition = Sine.easeInOut.calculate(fadePhase);
+			shader.fadePosition = Sine.easeInOut.calculate(bgFadePhase);
 		}
 	}
 	
@@ -250,17 +242,13 @@ class Main extends Application {
 	inline function updateSlices(dt) {
 		
 		newSliceTimer += dt;
-		if(newSliceTimer >= NewSliceTime){
-			newSliceTimer = 0;
-			pickNewStripTargets();
-		}
+		if (newSliceTimer >= NewSliceTime) pickNewStripTargets();
 		
-		// lerp slices toward targets...
+		// move slices toward targets...
 		var c;
-		var f = 0.0003; // speed
 		for (i in 0...SliceCount) {
 			c = currentStrips[i];
-			currentStrips[i] = c + (targetStrips[i]-c) * f;    
+			currentStrips[i] = c + (targetStrips[i]-c) * SliceTransitionSpeed;    
 		}
 		
 		shader.setStrips(currentStrips);
@@ -271,10 +259,20 @@ class Main extends Application {
 	}
 	
 	
+	function pickNewStripTargets() {
+		newSliceTimer = 0;
+		var count = (4.5 + (Math.random() * Math.random()*2.5));
+		var stripWidth = 1.0 / count;
+		for (i in 0...SliceCount) targetStrips[i] = (i * stripWidth) + (Math.random() * stripWidth);
+	}
+	
+	
 	#if debugDraw 
 	var debugGraphics:Graphics;
 	function debugDraw() {
 		debugGraphics.clear();
+		
+		// draw bg slice positions
 		debugGraphics.alpha = .2;
 		for (i in 0...SliceCount) {
 			debugGraphics.lineStyle(2,0);

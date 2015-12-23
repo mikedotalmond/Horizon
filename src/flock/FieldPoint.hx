@@ -23,7 +23,7 @@ import util.MathUtil;
 class FieldPoint {
 	
 	static inline var Width = 1280;
-	static inline var Height = 420;
+	static inline var Height = 452;
 	static inline var rMax = 0x7fffffff;
 	
 	var next:Pt;
@@ -47,8 +47,9 @@ class FieldPoint {
 	}
 	
 	function rndPoint(pt:Pt) {
-		pt.x = (rnd() % (Width << 1)) - (Width >> 1);
-		pt.y = rnd() % Height;
+		//pt.x = fRnd() * (Width * 3);
+		pt.x = (rnd() % (Width * 3)) - Width;
+		pt.y = (rnd() % Height) -32;
 		pt.f = (rnd() / rMax);
 	}
 	

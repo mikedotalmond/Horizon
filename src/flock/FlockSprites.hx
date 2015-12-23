@@ -20,7 +20,7 @@ import worker.FlockData.FlockUpdateData;
 
 class FlockSprites extends ParticleContainer {
 	
-	static public inline var BoidCount:Int = 640;
+	static public inline var BoidCount:Int = 620;
 	static public inline var SpriteCount:Int = BoidCount << 1; // x2 for th 'reflection' clones
 	static public inline var DataSize:Int = SpriteCount * FlockData.FIELD_COUNT;
 	
@@ -58,13 +58,15 @@ class FlockSprites extends ParticleContainer {
 		// radial point forces...
 		var fx:Array<Float> = [
 			/* x, y, force */
-			-10, -10, .1,
-			-10, -10, .1,
+			-10, -10, 1,
+			-10, -10, 1,
+			-10, -10, 1,
 		];
 		
 		forces = [
 			new RndPoint(6, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
-			new RndPoint(4, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
+			new RndPoint(7, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
+			new RndPoint(8, .1, Linear.easeNone, Std.int(Math.random() * 0x7fffffff)),
 		];
 		
 		pointForces = new Float32Array(fx);

@@ -26,7 +26,7 @@ import util.MathUtil;
 	public static inline var TURN_SPEED:Float = .01;
 	public static inline var GridYOffset = 64;
 	
-	public static inline var MIN_DIST:Float = 1*1;
+	public static inline var MIN_DIST:Float = 2*2;
 	public static inline var MAX_DIST:Float = 32 * 32;
 	public static inline var MAX_DX:Float = 16;
 	
@@ -74,8 +74,8 @@ import util.MathUtil;
 			
 			size = 1.5 + Math.random(); 
 			scale = (2/3) + Math.random() * .25;
-			speed = (2/3) + Math.random() * (1/3);
-			turnSpeed = TURN_SPEED + TURN_SPEED * Math.random() * (2/3);
+			speed = (2/3) + Math.random() * (2/3);
+			turnSpeed = TURN_SPEED + TURN_SPEED * Math.random();// * (2 / 3);
 			
 			b = new Boid(i, size, scale, speed, turnSpeed);
 			
@@ -268,7 +268,7 @@ import util.MathUtil;
 			if (strength != 0) {
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);
-				f = 1 - ((hx * hx + hy * hy) / 6553600);
+				f = ((hx * hx + hy * hy) / 13107200);//2560*2560*2
 				f *= strength;
 				f /= sizeSq;
 				vxHeading += hx * f;

@@ -270,7 +270,7 @@ import util.MathUtil;
 			// (0...fieldCount) by index - own group gets more force from the associated field, other groups get less
 			var modField = j == ((index % fieldCount) * 3);
 			
-			strength = pointForces[j + 2] * (modField?1:.05);
+			strength = pointForces[j + 2] * (modField?1:.125);
 			if (strength != 0) {
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);

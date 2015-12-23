@@ -72,9 +72,9 @@ import util.MathUtil;
 		
 		for (i in 0...count) {
 			
-			size = 1.5 + Math.random(); 
-			scale = (2/3) + Math.random() * .25;
-			speed = (2/3) + Math.random() * (2/3);
+			size = 1.25 + Math.random(); 
+			scale = (1) + Math.random() * .10;
+			speed = (2/3) + Math.random() * (1/3);
 			turnSpeed = TURN_SPEED + TURN_SPEED * Math.random();// * (2 / 3);
 			
 			b = new Boid(i, size, scale, speed, turnSpeed);
@@ -261,10 +261,16 @@ import util.MathUtil;
 		var hy = .0;
 		var n = fieldCount;
 		
+		
 		var j;
 		for (i in 0...n) {			
-			j = i * 3;			
-			strength = pointForces[j + 2];
+			j = i * 3;	
+			
+			// split into groups for filds to act on 
+			// (0...fieldCount) by index - own group gets more force from the associated field, other groups get less
+			var modField = j == ((index % fieldCount) * 3);
+			
+			strength = pointForces[j + 2] * (modField?1:.05);
 			if (strength != 0) {
 				hx = (pointForces[j] - x);
 				hy = (pointForces[j + 1] - y);

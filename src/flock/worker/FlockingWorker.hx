@@ -147,7 +147,7 @@ import util.MathUtil;
 			bx = b.x; by = b.y;
 			
 			// limit boid 'thinking' for more.. unpredictable movement. think more near water.
-			if (b.y < 400 && Math.random() > .95) {
+			if (b.y < 400 && Math.random() > .75) {
 				b.step();
 			} else {
 				bXi = Std.int(bx / CellSize);

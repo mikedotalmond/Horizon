@@ -64,6 +64,7 @@ class Main extends Application {
 	var paused:Bool;
 	var mutedBeforePause:Bool;
 	var fullscreenEnabled:Bool;
+	var drawScale:Float;
 	
 	
 	public function new() {
@@ -180,6 +181,8 @@ class Main extends Application {
 			width = 1280 * r2;
 		}
 		
+		drawScale = width / 1280;
+		
 		canvas.style.top = (fullH/2 - height/2) + "px";
 		canvas.style.left = (fullW/2 - width/2) + "px";
 		canvas.style.width = width + "px";
@@ -200,7 +203,7 @@ class Main extends Application {
 		if (!ready) return;
 		
 		inputs.update(elapsed);
-		flock.update(seconds, dt);
+		flock.update(seconds, dt, drawScale);
 		
 		updateShaderParameters(seconds, dt);
 		updateSlices(dt);

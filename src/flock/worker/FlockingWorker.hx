@@ -106,6 +106,9 @@ import util.MathUtil;
 	
 	function update(data:FlockUpdateData) {
 		
+		var dScale = data.drawScale;
+		dScale = dScale < .5 ? .5 : dScale;
+		
 		var cloneOffset = count * FlockDataFields.COUNT;
 		
 		var pointForces = data.pointForces;
@@ -164,7 +167,7 @@ import util.MathUtil;
 			
 			d[index + FlockDataFields.DATA_X] = bx;
 			d[index + FlockDataFields.DATA_Y] = by;
-			d[index + FlockDataFields.DATA_SCALE] = b.drawScale;
+			d[index + FlockDataFields.DATA_SCALE] = b.drawScale/dScale;
 			
 			// 'reflection' clones			
 			index += cloneOffset;
@@ -172,7 +175,7 @@ import util.MathUtil;
 			d[index + FlockDataFields.DATA_Y] = 512 + (HEIGHT - b.y) * .15; 
 			
 			yScale = 1 - (by / HEIGHT); // x pos
-			d[index + FlockDataFields.DATA_SCALE] = b.scale + b.scale * yScale * .7; // y pos
+			d[index + FlockDataFields.DATA_SCALE] = (b.scale + b.scale * yScale * .7) / dScale; // y pos
 			
 			d[index + FlockDataFields.DATA_ALPHA] = 0.03 - .03 * yScale;
 			

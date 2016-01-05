@@ -69,7 +69,7 @@ class FlockSprites extends ParticleContainer {
 		pointForces = new Float32Array(fx);
 		
 		// create this container now, send it with each update
-		flockUpdateData = { type:WorkerDataType.UPDATE, pointForces:pointForces };
+		flockUpdateData = { type:WorkerDataType.UPDATE, pointForces:pointForces, drawScale:1.0 };
 		
 		flocker = new FlockControl(Golem.rise('res/flocking_worker.hxml'), onWorkerComplete, onWorkerError);		
 		flocker.start();
@@ -81,7 +81,7 @@ class FlockSprites extends ParticleContainer {
 	 * @param	now seconds
 	 * @param	dt seconds
 	 */
-	public function update(now:Float, dt:Float):Bool {	
+	public function update(now:Float, dt:Float, scale:Float=1.0):Bool {	
 		
 		if (needData) return false;
 		
@@ -113,8 +113,8 @@ class FlockSprites extends ParticleContainer {
 		}
 		
 		// send the update request
+		flockUpdateData.drawScale = scale;
 		flocker.send(flockUpdateData);
-		
 		return true;
 	}
 	

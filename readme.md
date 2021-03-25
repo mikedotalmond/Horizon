@@ -1,4 +1,4 @@
-#[Horizon](http://mikedotalmond.co.uk/horizon/)#
+--- [Horizon](http://mikedotalmond.co.uk/horizon/) ---
 
 [About the project](http://mikedotalmond.co.uk/projects/horizon)
 
